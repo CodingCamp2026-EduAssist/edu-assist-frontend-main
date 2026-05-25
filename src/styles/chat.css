@@ -716,3 +716,233 @@
     padding: 0;
   }
 }
+
+/* ===== PANEL CONTENT (History & Settings) ===== */
+.panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.panel-header {
+  margin-bottom: 0.5rem;
+}
+
+.panel-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 0.3rem;
+}
+
+.panel-sub {
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+/* ===== HISTORY ===== */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.history-item:hover {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.history-item-icon { font-size: 1.25rem; flex-shrink: 0; }
+
+.history-item-info { flex: 1; min-width: 0; }
+
+.history-item-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #1a1a2e;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.history-item-date {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 0.2rem;
+}
+
+.history-item-arrow {
+  color: #9ca3af;
+  font-size: 1rem;
+  transition: transform 0.2s;
+}
+
+.history-item:hover .history-item-arrow {
+  transform: translateX(3px);
+  color: #2563eb;
+}
+
+/* ===== SETTINGS ===== */
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.settings-section-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ca3af;
+}
+
+.settings-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+.settings-avatar-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.settings-avatar-placeholder {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.settings-profile-name {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.settings-profile-email {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 0.15rem;
+}
+
+.settings-profile-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  padding: 0.15rem 0.5rem;
+  border-radius: 100px;
+  margin-top: 0.3rem;
+}
+
+/* Theme Options */
+.settings-theme-options {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.theme-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #6b7280;
+  transition: border-color 0.2s, color 0.2s;
+  font-family: inherit;
+}
+
+.theme-option.active {
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.theme-preview {
+  width: 48px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.light-preview { background: #f8f7f4; }
+.dark-preview { background: #0a0a0f; }
+
+/* Logout */
+.settings-logout-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  border: 1px solid #fecaca;
+  background: #fff5f5;
+  color: #ef4444;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-family: inherit;
+  text-align: left;
+  width: fit-content;
+}
+
+.settings-logout-btn:hover { background: #fee2e2; }
+
+/* ===== COMING SOON (Spaces) ===== */
+.coming-soon {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-align: center;
+  padding: 4rem 0;
+}
+
+.coming-soon-icon { font-size: 2.5rem; }
+
+.coming-soon-text {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.coming-soon-sub {
+  font-size: 0.85rem;
+  color: #9ca3af;
+}

@@ -87,3 +87,19 @@
   background: #f9fafb;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
+
+.guest-btn {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  font-size: 0.85rem;
+  cursor: pointer;
+  font-family: inherit;
+  margin-top: 0.25rem;
+  transition: color 0.2s;
+  padding: 0.5rem;
+}
+
+.guest-btn:hover {
+  color: #6b7280;
+}

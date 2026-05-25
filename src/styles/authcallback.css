@@ -1,0 +1,60 @@
+.callback-root {
+    min-height: 100vh;
+    background: #f0efed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    font-family: 'Geist Variable', sans-serif;
+  }
+  
+  .callback-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+  
+  .callback-card {
+    position: relative;
+    z-index: 1;
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 3rem 2.5rem;
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+  }
+  
+  .callback-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #e5e7eb;
+    border-top-color: #2563eb;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-bottom: 0.5rem;
+  }
+  
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  
+  .callback-text {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a1a2e;
+  }
+  
+  .callback-sub {
+    font-size: 0.85rem;
+    color: #9ca3af;
+  }

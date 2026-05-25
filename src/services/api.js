@@ -1,172 +1,138 @@
-
-// src/services/api.js
-
 import api from './axiosInstance'
 
 /* =========================
-   ONBOARDING
+   AUTH
 ========================= */
-export async function submitOnboarding(profileData) {
+export function loginWithGoogle() {
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://edu-assist-be.onrender.com'
+  window.location.href = `${BASE_URL}/api/v1/auth/google`
+}
+
+export async function getMe() {
+  return await api.get('/api/v1/auth/me')
+}
+
+export async function logout() {
+  await api.post('/api/v1/auth/logout')
+  localStorage.removeItem('accessToken')
+  window.location.href = '/'
+}
+
+/* =========================
+   CHAT SESSIONS
+========================= */
+
+export async function createChatSession(payload = {}) {
   try {
-    return await api.post('/onboarding', profileData)
+    return await api.post('/api/v1/chat/sessions', {
+      title: payload.title || 'New Chat',
+      linkedDocumentIds: payload.linkedDocumentIds || [],
+      studentProfile: payload.studentProfile || {
+        educationLevel: 'undergraduate',
+        difficultyPreference: 'medium',
+        favouriteSubjects: [],
+        pace: 'normal',
+        explanationStyle: 'concise',
+      },
+      guestSessionId: payload.guestSessionId || undefined,
+      initialContext: payload.initialContext || undefined,
+    })
   } catch (error) {
-    throw new Error(
-      error.response?.data?.message ||
-      'Onboarding gagal'
-    )
+    throw new Error(error.response?.data?.message || 'Gagal membuat sesi chat')
+  }
+}
+
+export async function listChatSessions(guestSessionId = null) {
+  try {
+    const params = guestSessionId ? `?guestSessionId=${guestSessionId}` : ''
+    return await api.get(`/api/v1/chat/sessions${params}`)
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Gagal mengambil sesi chat')
+  }
+}
+
+export async function resumeChatSession(sessionId, guestSessionId = null) {
+  try {
+    const params = guestSessionId ? `?guestSessionId=${guestSessionId}` : ''
+    return await api.get(`/api/v1/chat/sessions/${sessionId}${params}`)
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Gagal mengambil sesi chat')
+  }
+}
+
+export async function getChatHistory(sessionId, guestSessionId = null) {
+  try {
+    const params = guestSessionId ? `?guestSessionId=${guestSessionId}` : ''
+    return await api.get(`/api/v1/chat/sessions/${sessionId}/messages${params}`)
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Gagal mengambil history pesan')
+  }
+}
+
+export async function sendMessage(sessionId, content, guestSessionId = null) {
+  try {
+    const params = guestSessionId ? `?guestSessionId=${guestSessionId}` : ''
+    return await api.post(`/api/v1/chat/sessions/${sessionId}/messages${params}`, {
+      content,
+      stream: false,
+    })
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Gagal mengirim pesan')
   }
 }
 
 /* =========================
-   CHAT STREAM
-========================= */
-export async function sendMessageStream(
-  payload,
-  onChunk,
-  onDone,
-  onError
-) {
-  try {
-    const response = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL}/chat`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      }
-    )
-
-    if (!response.ok) {
-      throw new Error('Gagal connect ke server')
-    }
-
-    if (!response.body) {
-      throw new Error('Response body tidak tersedia')
-    }
-
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-
-    while (true) {
-      const { done, value } = await reader.read()
-
-      if (done) break
-
-      const chunk = decoder.decode(value)
-
-      onChunk(chunk)
-    }
-
-    onDone()
-  } catch (error) {
-    onError(error.message)
-  }
-}
-
-/* =========================
-   UPLOAD FILE
+   UPLOAD SOURCE (RAG)
 ========================= */
 export async function uploadFile(file, userId) {
   try {
     const formData = new FormData()
-
     formData.append('file', file)
     formData.append('userId', userId)
-
-    return await api.post(
-      '/upload/file',
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    )
+    return await api.post('/api/v1/upload/file', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
   } catch (error) {
-    throw new Error(
-      error.response?.data?.message ||
-      'Upload file gagal'
-    )
+    throw new Error(error.response?.data?.message || 'Upload file gagal')
   }
 }
 
-/* =========================
-   UPLOAD URL
-========================= */
 export async function uploadURL(url, userId) {
   try {
-    return await api.post('/upload/url', {
-      url,
-      userId,
-    })
+    return await api.post('/api/v1/upload/url', { url, userId })
   } catch (error) {
-    throw new Error(
-      error.response?.data?.message ||
-      'Upload URL gagal'
-    )
+    throw new Error(error.response?.data?.message || 'Upload URL gagal')
   }
 }
 
-/* =========================
-   UPLOAD DRIVE
-========================= */
 export async function uploadDrive(driveUrl, userId) {
   try {
-    return await api.post('/upload/drive', {
-      driveUrl,
-      userId,
-    })
+    return await api.post('/api/v1/upload/drive', { driveUrl, userId })
   } catch (error) {
-    throw new Error(
-      error.response?.data?.message ||
-      'Upload Drive gagal'
-    )
+    throw new Error(error.response?.data?.message || 'Upload Drive gagal')
   }
 }
 
-/* =========================
-   UPLOAD TEXT
-========================= */
 export async function uploadText(text, userId) {
   try {
-    return await api.post('/upload/text', {
-      text,
-      userId,
-    })
+    return await api.post('/api/v1/upload/text', { text, userId })
   } catch (error) {
-    throw new Error(
-      error.response?.data?.message ||
-      'Upload text gagal'
-    )
+    throw new Error(error.response?.data?.message || 'Upload text gagal')
   }
 }
 
-/* =========================
-   GET SOURCES
-========================= */
 export async function getSources(userId) {
   try {
-    return await api.get(`/sources/${userId}`)
+    return await api.get(`/api/v1/sources/${userId}`)
   } catch (error) {
-    throw new Error(
-      error.response?.data?.message ||
-      'Gagal mengambil sources'
-    )
+    throw new Error(error.response?.data?.message || 'Gagal mengambil sources')
   }
 }
 
-/* =========================
-   DELETE SOURCE
-========================= */
 export async function deleteSource(sourceId) {
   try {
-    return await api.delete(`/sources/${sourceId}`)
+    return await api.delete(`/api/v1/sources/${sourceId}`)
   } catch (error) {
-    throw new Error(
-      error.response?.data?.message ||
-      'Gagal menghapus source'
-    )
+    throw new Error(error.response?.data?.message || 'Gagal menghapus source')
   }
 }

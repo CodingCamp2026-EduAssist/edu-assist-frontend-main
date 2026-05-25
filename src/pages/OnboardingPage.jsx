@@ -1,12 +1,17 @@
 import { useNavigate } from 'react-router-dom'
+import { loginWithGoogle } from '../services/api'
 import '../styles/onboarding.css'
 
 function OnboardingPage() {
   const navigate = useNavigate()
 
   function handleGoogleLogin() {
-    // Nanti disambungkan ke Google Auth dari Nadila
-    // Sementara langsung ke chat dulu
+    loginWithGoogle()
+  }
+
+  function handleGuestMode() {
+    const guestSessionId = `guest-${Date.now()}`
+    localStorage.setItem('guestSessionId', guestSessionId)
     navigate('/chat')
   }
 
@@ -28,6 +33,9 @@ function OnboardingPage() {
             <path fill="none" d="M0 0h48v48H0z"/>
           </svg>
           Continue with Google
+        </button>
+        <button className="guest-btn" onClick={handleGuestMode}>
+          Lanjut tanpa login →
         </button>
       </div>
     </div>

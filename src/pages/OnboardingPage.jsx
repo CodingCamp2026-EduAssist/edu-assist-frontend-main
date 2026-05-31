@@ -21,7 +21,7 @@ function OnboardingPage() {
       <div className="login-grid" />
       <div className="login-card">
       <img
-    src="/icons/image1.png"
+    src="/icons/logo-eduassist2.svg"
     alt="EduAssist"
     className="sidebar-full-logo"
   />

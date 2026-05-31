@@ -88,15 +88,26 @@ export async function sendMessage(sessionId, content = null, requestConfig = {})
   const { timeout = DEFAULT_SEND_MESSAGE_TIMEOUT, ...restConfig } = requestConfig
 
   try {
+
+    console.log('SESSION ID:', sessionId)
+    console.log('CONTENT:', content)
+
     return await apiClient.post(
       `/api/v1/chat/sessions/${sessionId}/messages`,
-      { content, stream: false, attachmentIds: ["d610c3e4-8368-4077-baea-506e7f1ecb70"], locale: "en-US" },
+      { content, stream: false, attachmentIds: [], locale: "en-US" },
       { timeout, ...restConfig },
     )
   } catch (error) {
-    console.error('Error sending message:', error)
-    throw new Error(error.response?.data?.message || error.response?.data?.error || 'Gagal mengirim pesan')
-  }
+  console.log('STATUS:', error.response?.status)
+  console.log('DATA:', error.response?.data)
+  console.error(error)
+
+  throw new Error(
+    error.response?.data?.message ||
+    error.response?.data?.error ||
+    'Gagal mengirim pesan'
+  )
+}
 }
 
 /* =========================
@@ -107,6 +118,9 @@ export async function uploadFile(file, userId) {
     const formData = new FormData()
     formData.append('file', file)
     formData.append('userId', userId)
+    
+    
+
     return await apiClient.post('/api/v1/upload/file', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })

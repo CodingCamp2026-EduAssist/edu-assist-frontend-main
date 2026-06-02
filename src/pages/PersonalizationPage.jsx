@@ -159,8 +159,7 @@ const PersonalizationPage = () => {
             profile.educationLevel &&
             profile.difficultyPreference &&
             profile.explanationStyle &&
-            profile.pace &&
-            profile.favouriteSubjects
+            profile.pace
         ) {
             navigate("/");
         }

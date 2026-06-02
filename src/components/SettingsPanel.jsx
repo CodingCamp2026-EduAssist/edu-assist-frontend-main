@@ -1,31 +1,41 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Settings, LogOut, ChevronDown } from "lucide-react";
 import { useAuthStore } from "@/store/auth-store";
 import { useProfileStore } from "@/store/profile-store";
 import { useChatStore } from "@/store/chat-store";
 import { logout } from "../services/api";
 
-const SUBJECTS = [
-    "Matematika",
-    "Fisika",
-    "Kimia",
-    "Biologi",
-    "Sejarah",
-    "Bahasa Inggris",
-    "Ekonomi",
-    "Sastra",
-    "Ilmu Komputer",
-    "Geografi",
-    "Sosiologi",
-    "Seni & Budaya",
-];
-
 export default function SettingsPanel() {
     const user = useAuthStore((state) => state.user);
     const userProfile = useProfileStore((state) => state.userProfiles) || {};
     const updateUserProfile = useProfileStore((state) => state.updateUserProfile);
     const { theme, setTheme } = useChatStore();
+    
     const [focusedField, setFocusedField] = useState(null);
+    const [subjectInput, setSubjectInput] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveSuccess, setSaveSuccess] = useState(false);
+
+    // Maintain local draft state to avoid api call on every single modification
+    const [draftProfile, setDraftProfile] = useState({
+        educationLevel: "undergraduate",
+        difficultyPreference: "medium",
+        explanationStyle: "concise",
+        pace: "medium",
+        favouriteSubjects: [],
+    });
+
+    useEffect(() => {
+        if (userProfile) {
+            setDraftProfile({
+                educationLevel: userProfile.educationLevel || "undergraduate",
+                difficultyPreference: userProfile.difficultyPreference || "medium",
+                explanationStyle: userProfile.explanationStyle || "concise",
+                pace: userProfile.pace || "medium",
+                favouriteSubjects: userProfile.favouriteSubjects || [],
+            });
+        }
+    }, [userProfile]);
 
     const initials = user.name
         ? user.name
@@ -36,12 +46,48 @@ export default function SettingsPanel() {
               .slice(0, 2)
         : "U";
 
-    function handleProfileUpdate(key, value) {
-        updateUserProfile({
-            ...userProfile,
+    const handleFieldUpdate = (key, value) => {
+        setDraftProfile((prev) => ({
+            ...prev,
             [key]: value,
-        });
-    }
+        }));
+    };
+
+    const handleSubjectKeyDown = (e) => {
+        if (e.key === " " || e.key === "Enter") {
+            e.preventDefault();
+            const val = subjectInput.trim();
+            if (val && !draftProfile.favouriteSubjects.includes(val)) {
+                setDraftProfile((prev) => ({
+                    ...prev,
+                    favouriteSubjects: [...prev.favouriteSubjects, val],
+                }));
+            }
+            setSubjectInput("");
+        }
+    };
+
+    const removeSubject = (sub) => {
+        setDraftProfile((prev) => ({
+            ...prev,
+            favouriteSubjects: prev.favouriteSubjects.filter((s) => s !== sub),
+        }));
+    };
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        setSaveSuccess(false);
+        try {
+            await updateUserProfile(draftProfile);
+            setSaveSuccess(true);
+            setTimeout(() => setSaveSuccess(false), 2000);
+        } catch (err) {
+            console.error("Gagal menyimpan profil:", err);
+            alert("Gagal menyimpan profil: " + err.message);
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     return (
         <div className="flex-1 overflow-y-auto p-8 flex flex-col gap-6">
@@ -54,9 +100,10 @@ export default function SettingsPanel() {
                     Pengaturan
                 </h2>
                 <p className="text-[0.85rem] text-[#9ca3af]">
-                    Kelola profil dan tampilan aplikasi
+                    Kelola profil dan preferensi belajar Anda
                 </p>
             </div>
+            
             <div className="flex flex-col gap-3">
                 <h3 className="text-[0.8rem] font-semibold uppercase tracking-wider text-[#9ca3af]">
                     Profil
@@ -88,6 +135,7 @@ export default function SettingsPanel() {
                     </div>
                 </div>
             </div>
+
             <div className="flex flex-col gap-3">
                 <h3 className="text-[0.8rem] font-semibold uppercase tracking-wider text-[#9ca3af]">
                     Preferensi Belajar
@@ -100,8 +148,8 @@ export default function SettingsPanel() {
                             </label>
                             <div className="relative">
                                 <select
-                                    value={userProfile.educationLevel || "undergraduate"}
-                                    onChange={(e) => handleProfileUpdate("educationLevel", e.target.value)}
+                                    value={draftProfile.educationLevel}
+                                    onChange={(e) => handleFieldUpdate("educationLevel", e.target.value)}
                                     onFocus={() => setFocusedField("educationLevel")}
                                     onBlur={() => setFocusedField(null)}
                                     className="w-full bg-white dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 rounded-lg py-2 pl-3 pr-10 text-[#1a1a2e] dark:text-white text-[0.82rem] outline-none focus:border-[#2563eb] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#2563eb]/10 transition-all duration-200 appearance-none cursor-pointer"
@@ -116,14 +164,15 @@ export default function SettingsPanel() {
                                 />
                             </div>
                         </div>
+
                         <div className="flex flex-col gap-1.5">
                             <label className="text-[0.8rem] font-semibold text-slate-500 dark:text-white/60">
                                 Gaya Penjelasan
                             </label>
                             <div className="relative">
                                 <select
-                                    value={userProfile.explanationStyle || "concise"}
-                                    onChange={(e) => handleProfileUpdate("explanationStyle", e.target.value)}
+                                    value={draftProfile.explanationStyle}
+                                    onChange={(e) => handleFieldUpdate("explanationStyle", e.target.value)}
                                     onFocus={() => setFocusedField("explanationStyle")}
                                     onBlur={() => setFocusedField(null)}
                                     className="w-full bg-white dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 rounded-lg py-2 pl-3 pr-10 text-[#1a1a2e] dark:text-white text-[0.82rem] outline-none focus:border-[#2563eb] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#2563eb]/10 transition-all duration-200 appearance-none cursor-pointer"
@@ -139,14 +188,15 @@ export default function SettingsPanel() {
                                 />
                             </div>
                         </div>
+
                         <div className="flex flex-col gap-1.5">
                             <label className="text-[0.8rem] font-semibold text-slate-500 dark:text-white/60">
                                 Tingkat Kesulitan
                             </label>
                             <div className="relative">
                                 <select
-                                    value={userProfile.difficultyPreference || "medium"}
-                                    onChange={(e) => handleProfileUpdate("difficultyPreference", e.target.value)}
+                                    value={draftProfile.difficultyPreference}
+                                    onChange={(e) => handleFieldUpdate("difficultyPreference", e.target.value)}
                                     onFocus={() => setFocusedField("difficultyPreference")}
                                     onBlur={() => setFocusedField(null)}
                                     className="w-full bg-white dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 rounded-lg py-2 pl-3 pr-10 text-[#1a1a2e] dark:text-white text-[0.82rem] outline-none focus:border-[#2563eb] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#2563eb]/10 transition-all duration-200 appearance-none cursor-pointer"
@@ -162,14 +212,15 @@ export default function SettingsPanel() {
                                 />
                             </div>
                         </div>
+
                         <div className="flex flex-col gap-1.5">
                             <label className="text-[0.8rem] font-semibold text-slate-500 dark:text-white/60">
                                 Kecepatan Belajar
                             </label>
                             <div className="relative">
                                 <select
-                                    value={userProfile.pace || "medium"}
-                                    onChange={(e) => handleProfileUpdate("pace", e.target.value)}
+                                    value={draftProfile.pace}
+                                    onChange={(e) => handleFieldUpdate("pace", e.target.value)}
                                     onFocus={() => setFocusedField("pace")}
                                     onBlur={() => setFocusedField(null)}
                                     className="w-full bg-white dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 rounded-lg py-2 pl-3 pr-10 text-[#1a1a2e] dark:text-white text-[0.82rem] outline-none focus:border-[#2563eb] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#2563eb]/10 transition-all duration-200 appearance-none cursor-pointer"
@@ -184,39 +235,61 @@ export default function SettingsPanel() {
                                 />
                             </div>
                         </div>
+
                         <div className="flex flex-col gap-2 border-t border-[#e5e7eb] dark:border-white/10 pt-4 col-span-1 md:col-span-2">
                             <label className="text-[0.8rem] font-semibold text-slate-500 dark:text-white/60">
                                 Mata Pelajaran Favorit
                             </label>
-                            <div className="flex flex-wrap gap-2">
-                                {SUBJECTS.map((sub) => {
-                                    const isSelected = (userProfile.favouriteSubjects || []).includes(sub);
-                                    return (
+                            <div className="flex flex-wrap gap-2 p-2.5 border border-[#e5e7eb] dark:border-white/10 rounded-lg bg-[#f9fafb] dark:bg-[#121218] focus-within:border-[#2563eb] dark:focus-within:border-blue-500 transition-all duration-200">
+                                {(draftProfile.favouriteSubjects || []).map((sub) => (
+                                    <span
+                                        key={sub}
+                                        className="flex items-center gap-1 bg-[#eff6ff] dark:bg-white/5 text-[#2563eb] dark:text-blue-400 text-xs font-semibold py-1 px-2.5 rounded-full border border-[#bfdbfe] dark:border-white/10"
+                                    >
+                                        <span>{sub}</span>
                                         <button
-                                            key={sub}
-                                            onClick={() => {
-                                                const current = userProfile.favouriteSubjects || [];
-                                                const next = isSelected
-                                                    ? current.filter((s) => s !== sub)
-                                                    : [...current, sub];
-                                                handleProfileUpdate("favouriteSubjects", next);
-                                            }}
-                                            className={`flex items-center gap-1.5 py-1.5 px-3 rounded-full border text-xs font-semibold cursor-pointer transition-all duration-200 ${
-                                                isSelected
-                                                    ? "bg-[#2563eb] border-[#2563eb] text-white shadow-sm"
-                                                    : "bg-white dark:bg-[#1a1a24] border-[#e5e7eb] dark:border-white/10 text-[#6b7280] dark:text-white/60 hover:border-[#2563eb] dark:hover:border-blue-500 hover:text-[#2563eb] dark:hover:text-blue-400"
-                                            }`}
+                                            type="button"
+                                            onClick={() => removeSubject(sub)}
+                                            className="bg-transparent border-none text-[#2563eb] dark:text-blue-400 hover:text-red-500 dark:hover:text-red-400 cursor-pointer text-xs ml-0.5 p-0 shrink-0 font-bold flex items-center justify-center"
                                         >
-                                            {isSelected && <span className="text-xs">✓</span>}
-                                            <span>{sub}</span>
+                                            ×
                                         </button>
-                                    );
-                                })}
+                                    </span>
+                                ))}
+                                <input
+                                    type="text"
+                                    className="flex-grow min-w-[150px] bg-transparent border-none outline-none text-[#1a1a2e] dark:text-white text-xs py-0.5 placeholder-[#c4cad4] dark:placeholder-white/30"
+                                    placeholder="Ketik pelajaran & tekan Space / Enter..."
+                                    value={subjectInput}
+                                    onChange={(e) => setSubjectInput(e.target.value)}
+                                    onKeyDown={handleSubjectKeyDown}
+                                />
                             </div>
                         </div>
                     </div>
+
+                    <div className="flex justify-end pt-2 border-t border-[#e5e7eb] dark:border-white/10 mt-2">
+                        <button
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            className={`py-2.5 px-6 rounded-lg border-none text-white text-[0.82rem] font-semibold cursor-pointer shadow-sm transition-all duration-200 flex items-center gap-2 ${
+                                saveSuccess
+                                    ? "bg-green-600 hover:bg-green-700"
+                                    : "bg-[#2563eb] dark:bg-blue-600 hover:opacity-90 disabled:opacity-50"
+                            }`}
+                        >
+                            {isSaving ? (
+                                <span>Menyimpan...</span>
+                            ) : saveSuccess ? (
+                                <span>✓ Tersimpan</span>
+                            ) : (
+                                <span>Simpan Perubahan</span>
+                            )}
+                        </button>
+                    </div>
                 </div>
             </div>
+
             <div className="flex flex-col gap-3">
                 <h3 className="text-[0.8rem] font-semibold uppercase tracking-wider text-[#9ca3af]">
                     Tema Tampilan
@@ -238,6 +311,7 @@ export default function SettingsPanel() {
                     </button>
                 </div>
             </div>
+
             <div className="flex flex-col gap-3">
                 <h3 className="text-[0.8rem] font-semibold uppercase tracking-wider text-[#9ca3af]">
                     Akun

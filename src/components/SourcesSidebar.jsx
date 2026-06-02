@@ -6,37 +6,7 @@ import { useAuthStore } from "@/store/auth-store";
 
 const SOURCE_ICONS = {
     file: <FileText size={20} className="text-blue-500" />,
-    drive: <SiGoogledrive size={20} className="text-green-600" />,
-    url: <Globe size={20} className="text-indigo-500" />,
-    text: <ClipboardList size={20} className="text-orange-500" />,
 };
-
-const SOURCE_TYPES_LIST = [
-    {
-        id: "file",
-        icon: <FileText size={18} />,
-        label: "Upload File",
-        desc: "PDF",
-    },
-    {
-        id: "drive",
-        icon: <SiGoogledrive size={18} />,
-        label: "Google Drive",
-        desc: "Paste link Drive",
-    },
-    {
-        id: "url",
-        icon: <Globe size={18} />,
-        label: "Website URL",
-        desc: "Paste link website",
-    },
-    {
-        id: "text",
-        icon: <ClipboardList size={18} />,
-        label: "Copied Text",
-        desc: "Paste teks langsung",
-    },
-];
 
 export default function SourcesSidebar() {
     const fileInputRef = useRef(null);
@@ -46,17 +16,12 @@ export default function SourcesSidebar() {
         sources,
         sourcesOpen,
         showAddSource,
-        activeSourceType,
-        sourceInput,
         dragOver,
         setSourcesOpen,
         setShowAddSource,
-        setActiveSourceType,
-        setSourceInput,
         setDragOver,
         deleteSource,
         handleFileUpload,
-        handleAddSourceInput,
     } = useSourcesStore();
 
     const handleFileChange = (e) => {
@@ -79,10 +44,6 @@ export default function SourcesSidebar() {
             return;
         }
         handleFileUpload(file, user?.id || "guest");
-    };
-
-    const onAddSourceInputClick = () => {
-        handleAddSourceInput(user?.id || "guest");
     };
 
     return (
@@ -124,75 +85,40 @@ export default function SourcesSidebar() {
             {/* Add Source Input Panels */}
             {sourcesOpen && showAddSource && (
                 <div className="flex flex-col gap-2.5 bg-[#f9fafb] dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 rounded-xl p-3 shrink-0">
-                    <div className="flex gap-1.5">
-                        {SOURCE_TYPES_LIST.map((t) => (
-                            <button
-                                key={t.id}
-                                className={`flex-1 p-1.5 rounded-lg border border-[#e5e7eb] dark:border-white/10 bg-white dark:bg-[#121218] text-[#6b7280] dark:text-white/60 text-[1rem] cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-[#f3f4f6] dark:hover:bg-white/5 hover:text-[#1a1a2e] dark:hover:text-white ${activeSourceType === t.id ? "bg-[#eff6ff] dark:bg-blue-900/30 border-[#2563eb] dark:border-blue-500 text-[#2563eb] dark:text-blue-400" : ""}`}
-                                onClick={() => setActiveSourceType(t.id)}
-                            >
-                                {t.icon}
-                            </button>
-                        ))}
+                    <div
+                        className={`border border-dashed rounded-lg p-5 flex flex-col items-center gap-1 cursor-pointer transition-all duration-300 transform text-center bg-white dark:bg-[#121218] ${
+                            dragOver
+                                ? "border-[#2563eb] bg-[#eff6ff]/80 dark:bg-blue-900/10 scale-[1.03] shadow-[0_0_15px_rgba(37,99,235,0.25)] animate-pulse"
+                                : "border-[#d1d5db] dark:border-white/20 hover:border-[#2563eb] hover:bg-[#eff6ff]/30 dark:hover:bg-white/5"
+                        }`}
+                        onDragOver={(e) => {
+                            e.preventDefault();
+                            setDragOver(true);
+                        }}
+                        onDragLeave={() => setDragOver(false)}
+                        onDrop={handleDrop}
+                        onClick={() => fileInputRef.current?.click()}
+                    >
+                        <FileText
+                            size={32}
+                            className={`transition-transform duration-300 ${
+                                dragOver ? "text-[#2563eb] scale-110" : "text-slate-400"
+                            } mb-1`}
+                        />
+                        <p className="text-[0.8rem] font-medium text-[#6b7280] dark:text-white/60">
+                            {dragOver ? "Lepaskan file PDF di sini!" : "Drop file atau klik untuk upload"}
+                        </p>
+                        <p className="text-[0.72rem] text-[#9ca3af]">
+                            Hanya PDF
+                        </p>
+                        <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept=".pdf"
+                            className="hidden"
+                            onChange={handleFileChange}
+                        />
                     </div>
-                    {activeSourceType === "file" && (
-                        <div
-                            className={`border border-dashed rounded-lg p-5 flex flex-col items-center gap-1 cursor-pointer transition-all duration-300 transform text-center bg-white dark:bg-[#121218] ${
-                                dragOver
-                                    ? "border-[#2563eb] bg-[#eff6ff]/80 dark:bg-blue-900/10 scale-[1.03] shadow-[0_0_15px_rgba(37,99,235,0.25)] animate-pulse"
-                                    : "border-[#d1d5db] dark:border-white/20 hover:border-[#2563eb] hover:bg-[#eff6ff]/30 dark:hover:bg-white/5"
-                            }`}
-                            onDragOver={(e) => {
-                                e.preventDefault();
-                                setDragOver(true);
-                            }}
-                            onDragLeave={() => setDragOver(false)}
-                            onDrop={handleDrop}
-                            onClick={() => fileInputRef.current?.click()}
-                        >
-                            <FileText
-                                size={32}
-                                className={`transition-transform duration-300 ${
-                                    dragOver ? "text-[#2563eb] scale-110" : "text-slate-400"
-                                } mb-1`}
-                            />
-                            <p className="text-[0.8rem] font-medium text-[#6b7280] dark:text-white/60">
-                                {dragOver ? "Lepaskan file PDF di sini!" : "Drop file atau klik untuk upload"}
-                            </p>
-                            <p className="text-[0.72rem] text-[#9ca3af]">
-                                Hanya PDF
-                            </p>
-                            <input
-                                ref={fileInputRef}
-                                type="file"
-                                accept=".pdf"
-                                className="hidden"
-                                onChange={handleFileChange}
-                            />
-                        </div>
-                    )}
-                    {activeSourceType !== "file" && (
-                        <div className="flex flex-col gap-1.5">
-                            <input
-                                className="bg-white dark:bg-[#121218] border border-[#e5e7eb] dark:border-white/10 rounded-lg py-2 px-3 text-[#1a1a2e] dark:text-white text-[0.82rem] outline-none transition-all duration-200 w-full placeholder-[#c4cad4] dark:placeholder-white/30 focus:border-[#2563eb] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#2563eb]/10"
-                                placeholder={
-                                    activeSourceType === "drive"
-                                        ? "Paste link Google Drive..."
-                                        : activeSourceType === "url"
-                                            ? "Paste URL website..."
-                                            : "Paste teks di sini..."
-                                }
-                                value={sourceInput}
-                                onChange={(e) => setSourceInput(e.target.value)}
-                            />
-                            <button
-                                className="py-2 rounded-lg border-none bg-[#2563eb] text-white text-[0.82rem] font-semibold cursor-pointer transition-all duration-200 hover:opacity-90"
-                                onClick={onAddSourceInputClick}
-                            >
-                                Tambah
-                            </button>
-                        </div>
-                    )}
                 </div>
             )}
 

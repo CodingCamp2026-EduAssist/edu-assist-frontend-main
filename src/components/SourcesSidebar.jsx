@@ -32,6 +32,8 @@ export default function SourcesSidebar() {
         handleFileUpload,
     } = useSourcesStore();
 
+    const dragCounter = useRef(0);
+
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -42,9 +44,26 @@ export default function SourcesSidebar() {
         handleFileUpload(file, user?.id || "guest");
     };
 
+    const handleDragEnter = (e) => {
+        e.preventDefault();
+        dragCounter.current++;
+        if (dragCounter.current === 1) {
+            setDragOver(true);
+        }
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        dragCounter.current--;
+        if (dragCounter.current === 0) {
+            setDragOver(false);
+        }
+    };
+
     const handleDrop = (e) => {
         e.preventDefault();
         setDragOver(false);
+        dragCounter.current = 0;
         const file = e.dataTransfer.files[0];
         if (!file) return;
         if (!file.name.toLowerCase().endsWith(".pdf")) {
@@ -56,24 +75,8 @@ export default function SourcesSidebar() {
 
     return (
         <div
-            className={`bg-white dark:bg-[#121218] border-r border-[#e5e7eb] dark:border-white/10 flex flex-col py-5 transition-all duration-250 overflow-y-auto max-[900px]:hidden scrollbar-thin relative ${sourcesOpen ? "w-[280px] min-w-[280px] px-4 gap-3" : "w-14 min-w-14 px-0 gap-4 flex flex-col items-center"}`}
-            onDragOver={(e) => {
-                e.preventDefault();
-                setDragOver(true);
-            }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={handleDrop}
+            className={`bg-white dark:bg-[#121218] border-r border-[#e5e7eb] dark:border-white/10 flex flex-col py-5 transition-all duration-250 overflow-y-auto max-[900px]:hidden scrollbar-thin ${sourcesOpen ? "w-[280px] min-w-[280px] px-4 gap-3" : "w-14 min-w-14 px-0 gap-4 flex flex-col items-center"}`}
         >
-            {/* Full Sidebar Drag-Over Overlay */}
-            {dragOver && (
-                <div className="absolute inset-0 bg-[#eff6ff]/95 dark:bg-blue-950/90 backdrop-blur-[2px] z-50 flex flex-col items-center justify-center border-2 border-dashed border-[#2563eb] rounded-r-xl pointer-events-none p-4 text-center">
-                    <FileText size={44} className="text-[#2563eb] animate-bounce mb-2" />
-                    <p className="text-[0.875rem] font-bold text-[#2563eb] dark:text-blue-400">
-                        Lepaskan PDF untuk Upload!
-                    </p>
-                </div>
-            )}
-
             {/* Header */}
             <div
                 className={`flex items-center w-full ${sourcesOpen ? "justify-between" : "flex-col gap-2 justify-center"}`}
@@ -119,99 +122,118 @@ export default function SourcesSidebar() {
                 {sourcesOpen && <span>Tambah Sumber</span>}
             </button>
 
-            {/* Add Source Input Panels */}
-            {sourcesOpen && showAddSource && (
-                <div className="flex flex-col gap-2.5 bg-[#f9fafb] dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 rounded-xl p-3 shrink-0">
-                    <div
-                        className="border border-dashed border-[#d1d5db] dark:border-white/20 rounded-lg h-36 p-5 flex flex-col items-center gap-1 cursor-pointer transition-all duration-300 transform text-center bg-white dark:bg-[#121218] hover:border-[#2563eb] hover:bg-[#eff6ff]/30 dark:hover:bg-white/5"
-                        onClick={() => fileInputRef.current?.click()}
-                    >
-                        <FileText
-                            size={32}
-                            className="text-slate-400 mb-1"
-                        />
-                        <p className="text-[0.8rem] font-medium text-[#6b7280] dark:text-white/60">
-                            Drop file atau klik untuk upload
+            {/* Scoped Drag-Active Zone (Excluding Header & Button) */}
+            <div
+                className="flex-grow flex flex-col relative min-h-0 gap-3"
+                onDragEnter={handleDragEnter}
+                onDragOver={(e) => e.preventDefault()}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+            >
+                {/* Drag-Over Overlay */}
+                {dragOver && (
+                    <div className="absolute inset-0 bg-[#eff6ff]/95 dark:bg-blue-950/90 backdrop-blur-[2px] z-50 flex flex-col items-center justify-center border-2 border-dashed border-[#2563eb] rounded-xl pointer-events-none p-4 text-center">
+                        <FileText size={44} className="text-[#2563eb] animate-bounce mb-2" />
+                        <p className="text-[0.875rem] font-bold text-[#2563eb] dark:text-blue-400">
+                            Lepaskan PDF untuk Upload!
                         </p>
-                        <p className="text-[0.72rem] text-[#9ca3af]">
-                            Hanya PDF
-                        </p>
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept=".pdf"
-                            className="hidden"
-                            onChange={handleFileChange}
-                        />
                     </div>
-                </div>
-            )}
+                )}
 
-            {/* Sources List */}
-            {sources.length === 0 ? (
-                sourcesOpen ? (
-                    <div className="flex-1 flex flex-col items-center justify-center gap-1.5 text-center py-8 px-2">
-                        <FolderOpen
-                            size={40}
-                            className="text-slate-300 dark:text-white/20 mb-1"
-                        />
-                        <p className="text-[0.875rem] font-semibold text-[#6b7280] dark:text-white/60">
-                            Belum ada sumber
-                        </p>
-                        <p className="text-[0.78rem] text-[#9ca3af] dark:text-white/40 leading-relaxed">
-                            Tambah file, link, atau teks sebagai RAG
-                        </p>
+                {/* Add Source Input Panels */}
+                {sourcesOpen && showAddSource && (
+                    <div className="flex flex-col gap-2.5 bg-[#f9fafb] dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 rounded-xl p-3 shrink-0">
+                        <div
+                            className="border border-dashed border-[#d1d5db] dark:border-white/20 rounded-lg h-36 p-5 flex flex-col items-center gap-1 cursor-pointer transition-all duration-300 transform text-center bg-white dark:bg-[#121218] hover:border-[#2563eb] hover:bg-[#eff6ff]/30 dark:hover:bg-white/5"
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            <FileText
+                                size={32}
+                                className="text-slate-400 mb-1"
+                            />
+                            <p className="text-[0.8rem] font-medium text-[#6b7280] dark:text-white/60">
+                                Drop file atau klik untuk upload
+                            </p>
+                            <p className="text-[0.72rem] text-[#9ca3af]">
+                                Hanya PDF
+                            </p>
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept=".pdf"
+                                className="hidden"
+                                onChange={handleFileChange}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* Sources List */}
+                {sources.length === 0 ? (
+                    sourcesOpen ? (
+                        <div className="flex-grow flex flex-col items-center justify-center gap-1.5 text-center py-8 px-2">
+                            <FolderOpen
+                                size={40}
+                                className="text-slate-300 dark:text-white/20 mb-1"
+                            />
+                            <p className="text-[0.875rem] font-semibold text-[#6b7280] dark:text-white/60">
+                                Belum ada sumber
+                            </p>
+                            <p className="text-[0.78rem] text-[#9ca3af] dark:text-white/40 leading-relaxed">
+                                Tambah file, link, atau teks sebagai RAG
+                            </p>
+                        </div>
+                    ) : (
+                        <div className="flex-grow flex items-center justify-center text-slate-300 dark:text-white/10">
+                            <FolderOpen size={20} />
+                        </div>
+                    )
+                ) : sourcesOpen ? (
+                    <div className="grid grid-cols-2 gap-2 overflow-y-auto">
+                        {sources.map((source) => (
+                            <div
+                                key={source.id}
+                                className="bg-[#f9fafb] dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 rounded-lg p-3 flex flex-col gap-1.5 relative transition-all duration-200 hover:border-[#2563eb] hover:bg-[#eff6ff] dark:hover:bg-white/5 group"
+                            >
+                                <div className="shrink-0">
+                                    {SOURCE_ICONS[source.type] || (
+                                        <FileText size={20} />
+                                    )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-[0.75rem] font-medium text-[#1a1a2e] dark:text-white overflow-hidden text-ellipsis whitespace-nowrap">
+                                        {source.name}
+                                    </p>
+                                    <p className="text-[0.68rem] text-[#9ca3af] overflow-hidden text-ellipsis whitespace-nowrap">
+                                        {source.meta}
+                                    </p>
+                                </div>
+                                <button
+                                    className="absolute top-1 right-1 w-[18px] h-[18px] rounded-full border-none bg-[#fee2e2] dark:bg-red-950/50 text-[#ef4444] text-[0.85rem] cursor-pointer hidden group-hover:flex items-center justify-center transition-colors duration-200 hover:bg-[#fecaca] dark:hover:bg-red-900"
+                                    onClick={() => deleteSource(source.id)}
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        ))}
                     </div>
                 ) : (
-                    <div className="flex-1 flex items-center justify-center text-slate-300 dark:text-white/10">
-                        <FolderOpen size={20} />
-                    </div>
-                )
-            ) : sourcesOpen ? (
-                <div className="grid grid-cols-2 gap-2 overflow-y-auto">
-                    {sources.map((source) => (
-                        <div
-                            key={source.id}
-                            className="bg-[#f9fafb] dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 rounded-lg p-3 flex flex-col gap-1.5 relative transition-all duration-200 hover:border-[#2563eb] hover:bg-[#eff6ff] dark:hover:bg-white/5 group"
-                        >
-                            <div className="shrink-0">
+                    <div className="flex-grow flex flex-col gap-3 items-center w-full overflow-y-auto pb-4">
+                        {sources.map((source) => (
+                            <div
+                                key={source.id}
+                                title={source.name}
+                                className="w-10 h-10 rounded-lg bg-white dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 flex items-center justify-center hover:border-[#2563eb] dark:hover:border-blue-500 cursor-pointer shrink-0 transition-colors duration-200"
+                                onClick={() => setSourcesOpen(true)}
+                            >
                                 {SOURCE_ICONS[source.type] || (
-                                    <FileText size={20} />
+                                    <FileText size={18} />
                                 )}
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-[0.75rem] font-medium text-[#1a1a2e] dark:text-white overflow-hidden text-ellipsis whitespace-nowrap">
-                                    {source.name}
-                                </p>
-                                <p className="text-[0.68rem] text-[#9ca3af] overflow-hidden text-ellipsis whitespace-nowrap">
-                                    {source.meta}
-                                </p>
-                            </div>
-                            <button
-                                className="absolute top-1 right-1 w-[18px] h-[18px] rounded-full border-none bg-[#fee2e2] dark:bg-red-950/50 text-[#ef4444] text-[0.85rem] cursor-pointer hidden group-hover:flex items-center justify-center transition-colors duration-200 hover:bg-[#fecaca] dark:hover:bg-red-900"
-                                onClick={() => deleteSource(source.id)}
-                            >
-                                ×
-                            </button>
-                        </div>
-                    ))}
-                </div>
-            ) : (
-                <div className="flex-1 flex flex-col gap-3 items-center w-full overflow-y-auto pb-4">
-                    {sources.map((source) => (
-                        <div
-                            key={source.id}
-                            title={source.name}
-                            className="w-10 h-10 rounded-lg bg-white dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 flex items-center justify-center hover:border-[#2563eb] dark:hover:border-blue-500 cursor-pointer shrink-0 transition-colors duration-200"
-                            onClick={() => setSourcesOpen(true)}
-                        >
-                            {SOURCE_ICONS[source.type] || (
-                                <FileText size={18} />
-                            )}
-                        </div>
-                    ))}
-                </div>
-            )}
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

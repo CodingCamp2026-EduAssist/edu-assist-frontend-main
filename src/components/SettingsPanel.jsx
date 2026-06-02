@@ -8,28 +8,33 @@ import { logout } from "../services/api";
 export default function SettingsPanel() {
     const user = useAuthStore((state) => state.user);
     const userProfile = useProfileStore((state) => state.userProfiles) || {};
-    const updateUserProfile = useProfileStore((state) => state.updateUserProfile);
+    const updateUserProfile = useProfileStore(
+        (state) => state.updateUserProfile,
+    );
     const { theme, setTheme } = useChatStore();
-    
+
     const [focusedField, setFocusedField] = useState(null);
     const [subjectInput, setSubjectInput] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     const [saveSuccess, setSaveSuccess] = useState(false);
 
     // Maintain local draft state to avoid api call on every single modification
-    const [draftProfile, setDraftProfile] = useState({
-        educationLevel: "undergraduate",
-        difficultyPreference: "medium",
-        explanationStyle: "concise",
-        pace: "medium",
-        favouriteSubjects: [],
-    });
+    const [draftProfile, setDraftProfile] = useState(
+        userProfile || {
+            educationLevel: "",
+            difficultyPreference: "",
+            explanationStyle: "",
+            pace: "",
+            favouriteSubjects: [],
+        },
+    );
 
     useEffect(() => {
         if (userProfile) {
             setDraftProfile({
                 educationLevel: userProfile.educationLevel || "undergraduate",
-                difficultyPreference: userProfile.difficultyPreference || "medium",
+                difficultyPreference:
+                    userProfile.difficultyPreference || "medium",
                 explanationStyle: userProfile.explanationStyle || "concise",
                 pace: userProfile.pace || "medium",
                 favouriteSubjects: userProfile.favouriteSubjects || [],
@@ -103,7 +108,7 @@ export default function SettingsPanel() {
                     Kelola profil dan preferensi belajar Anda
                 </p>
             </div>
-            
+
             <div className="flex flex-col gap-3">
                 <h3 className="text-[0.8rem] font-semibold uppercase tracking-wider text-[#9ca3af]">
                     Profil
@@ -149,14 +154,27 @@ export default function SettingsPanel() {
                             <div className="relative">
                                 <select
                                     value={draftProfile.educationLevel}
-                                    onChange={(e) => handleFieldUpdate("educationLevel", e.target.value)}
-                                    onFocus={() => setFocusedField("educationLevel")}
+                                    onChange={(e) =>
+                                        handleFieldUpdate(
+                                            "educationLevel",
+                                            e.target.value,
+                                        )
+                                    }
+                                    onFocus={() =>
+                                        setFocusedField("educationLevel")
+                                    }
                                     onBlur={() => setFocusedField(null)}
                                     className="w-full bg-white dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 rounded-lg py-2 pl-3 pr-10 text-[#1a1a2e] dark:text-white text-[0.82rem] outline-none focus:border-[#2563eb] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#2563eb]/10 transition-all duration-200 appearance-none cursor-pointer"
                                 >
-                                    <option value="high_school">Sekolah Menengah (SMA)</option>
-                                    <option value="undergraduate">Diploma / Sarjana (S1)</option>
-                                    <option value="graduate">Pascasarjana (S2/S3)</option>
+                                    <option value="high_school">
+                                        Sekolah Menengah (SMA)
+                                    </option>
+                                    <option value="undergraduate">
+                                        Diploma / Sarjana (S1)
+                                    </option>
+                                    <option value="graduate">
+                                        Pascasarjana (S2/S3)
+                                    </option>
                                 </select>
                                 <ChevronDown
                                     size={16}
@@ -172,15 +190,30 @@ export default function SettingsPanel() {
                             <div className="relative">
                                 <select
                                     value={draftProfile.explanationStyle}
-                                    onChange={(e) => handleFieldUpdate("explanationStyle", e.target.value)}
-                                    onFocus={() => setFocusedField("explanationStyle")}
+                                    onChange={(e) =>
+                                        handleFieldUpdate(
+                                            "explanationStyle",
+                                            e.target.value,
+                                        )
+                                    }
+                                    onFocus={() =>
+                                        setFocusedField("explanationStyle")
+                                    }
                                     onBlur={() => setFocusedField(null)}
                                     className="w-full bg-white dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 rounded-lg py-2 pl-3 pr-10 text-[#1a1a2e] dark:text-white text-[0.82rem] outline-none focus:border-[#2563eb] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#2563eb]/10 transition-all duration-200 appearance-none cursor-pointer"
                                 >
-                                    <option value="concise">Ringkas & To-the-point</option>
-                                    <option value="detailed">Lengkap & Komprehensif</option>
-                                    <option value="step_by_step">Step by Step (Tahapan)</option>
-                                    <option value="analogy">Analogi & Cerita</option>
+                                    <option value="concise">
+                                        Ringkas & To-the-point
+                                    </option>
+                                    <option value="detailed">
+                                        Lengkap & Komprehensif
+                                    </option>
+                                    <option value="step_by_step">
+                                        Step by Step (Tahapan)
+                                    </option>
+                                    <option value="analogy">
+                                        Analogi & Cerita
+                                    </option>
                                 </select>
                                 <ChevronDown
                                     size={16}
@@ -196,15 +229,30 @@ export default function SettingsPanel() {
                             <div className="relative">
                                 <select
                                     value={draftProfile.difficultyPreference}
-                                    onChange={(e) => handleFieldUpdate("difficultyPreference", e.target.value)}
-                                    onFocus={() => setFocusedField("difficultyPreference")}
+                                    onChange={(e) =>
+                                        handleFieldUpdate(
+                                            "difficultyPreference",
+                                            e.target.value,
+                                        )
+                                    }
+                                    onFocus={() =>
+                                        setFocusedField("difficultyPreference")
+                                    }
                                     onBlur={() => setFocusedField(null)}
                                     className="w-full bg-white dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 rounded-lg py-2 pl-3 pr-10 text-[#1a1a2e] dark:text-white text-[0.82rem] outline-none focus:border-[#2563eb] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#2563eb]/10 transition-all duration-200 appearance-none cursor-pointer"
                                 >
-                                    <option value="easy">Santai / Pemula</option>
-                                    <option value="medium">Standar / Menengah</option>
-                                    <option value="hard">Tantangan / Lanjut</option>
-                                    <option value="adaptive">Adaptif (AI-Powered)</option>
+                                    <option value="easy">
+                                        Santai / Pemula
+                                    </option>
+                                    <option value="medium">
+                                        Standar / Menengah
+                                    </option>
+                                    <option value="hard">
+                                        Tantangan / Lanjut
+                                    </option>
+                                    <option value="adaptive">
+                                        Adaptif (AI-Powered)
+                                    </option>
                                 </select>
                                 <ChevronDown
                                     size={16}
@@ -220,13 +268,22 @@ export default function SettingsPanel() {
                             <div className="relative">
                                 <select
                                     value={draftProfile.pace}
-                                    onChange={(e) => handleFieldUpdate("pace", e.target.value)}
+                                    onChange={(e) =>
+                                        handleFieldUpdate(
+                                            "pace",
+                                            e.target.value,
+                                        )
+                                    }
                                     onFocus={() => setFocusedField("pace")}
                                     onBlur={() => setFocusedField(null)}
                                     className="w-full bg-white dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 rounded-lg py-2 pl-3 pr-10 text-[#1a1a2e] dark:text-white text-[0.82rem] outline-none focus:border-[#2563eb] dark:focus:border-blue-500 focus:ring-2 focus:ring-[#2563eb]/10 transition-all duration-200 appearance-none cursor-pointer"
                                 >
-                                    <option value="slow">Perlahan (Slow)</option>
-                                    <option value="medium">Sedang (Medium)</option>
+                                    <option value="slow">
+                                        Perlahan (Slow)
+                                    </option>
+                                    <option value="medium">
+                                        Sedang (Medium)
+                                    </option>
                                     <option value="fast">Cepat (Fast)</option>
                                 </select>
                                 <ChevronDown
@@ -241,27 +298,33 @@ export default function SettingsPanel() {
                                 Mata Pelajaran Favorit
                             </label>
                             <div className="flex flex-wrap gap-2 p-2.5 border border-[#e5e7eb] dark:border-white/10 rounded-lg bg-[#f9fafb] dark:bg-[#121218] focus-within:border-[#2563eb] dark:focus-within:border-blue-500 transition-all duration-200">
-                                {(draftProfile.favouriteSubjects || []).map((sub) => (
-                                    <span
-                                        key={sub}
-                                        className="flex items-center gap-1 bg-[#eff6ff] dark:bg-white/5 text-[#2563eb] dark:text-blue-400 text-xs font-semibold py-1 px-2.5 rounded-full border border-[#bfdbfe] dark:border-white/10"
-                                    >
-                                        <span>{sub}</span>
-                                        <button
-                                            type="button"
-                                            onClick={() => removeSubject(sub)}
-                                            className="bg-transparent border-none text-[#2563eb] dark:text-blue-400 hover:text-red-500 dark:hover:text-red-400 cursor-pointer text-xs ml-0.5 p-0 shrink-0 font-bold flex items-center justify-center"
+                                {(draftProfile.favouriteSubjects || []).map(
+                                    (sub) => (
+                                        <span
+                                            key={sub}
+                                            className="flex items-center gap-1 bg-[#eff6ff] dark:bg-white/5 text-[#2563eb] dark:text-blue-400 text-xs font-semibold py-1 px-2.5 rounded-full border border-[#bfdbfe] dark:border-white/10"
                                         >
-                                            ×
-                                        </button>
-                                    </span>
-                                ))}
+                                            <span>{sub}</span>
+                                            <button
+                                                type="button"
+                                                onClick={() =>
+                                                    removeSubject(sub)
+                                                }
+                                                className="bg-transparent border-none text-[#2563eb] dark:text-blue-400 hover:text-red-500 dark:hover:text-red-400 cursor-pointer text-xs ml-0.5 p-0 shrink-0 font-bold flex items-center justify-center"
+                                            >
+                                                ×
+                                            </button>
+                                        </span>
+                                    ),
+                                )}
                                 <input
                                     type="text"
                                     className="flex-grow min-w-[150px] bg-transparent border-none outline-none text-[#1a1a2e] dark:text-white text-xs py-0.5 placeholder-[#c4cad4] dark:placeholder-white/30"
                                     placeholder="Ketik pelajaran & tekan Space / Enter..."
                                     value={subjectInput}
-                                    onChange={(e) => setSubjectInput(e.target.value)}
+                                    onChange={(e) =>
+                                        setSubjectInput(e.target.value)
+                                    }
                                     onKeyDown={handleSubjectKeyDown}
                                 />
                             </div>

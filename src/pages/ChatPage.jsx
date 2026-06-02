@@ -39,12 +39,14 @@ export default function ChatPage() {
                     role: msg.role === "user" ? "user" : "assistant",
                     content: msg.content,
                 }));
-                
+
                 // If there's an initial message stored from InitialChatPage, send it first
-                const pendingMsg = sessionStorage.getItem(`pending_msg_${sessionId}`);
+                const pendingMsg = sessionStorage.getItem(
+                    `pending_msg_${sessionId}`,
+                );
                 if (pendingMsg) {
                     sessionStorage.removeItem(`pending_msg_${sessionId}`);
-                    
+
                     // Add user pending message
                     const userMsg = { role: "user", content: pendingMsg };
                     setMessages([...formattedMessages, userMsg]);
@@ -169,7 +171,7 @@ export default function ChatPage() {
                         <div ref={messagesEndRef} />
                     </div>
                     <div className="py-4 px-6 pb-5 border-t border-[#e5e7eb] dark:border-white/10 bg-[#f8f7f4] dark:bg-[#0a0a0f]">
-                        <div className="flex items-end gap-2 bg-white dark:bg-[#121218] border border-[#e5e7eb] dark:border-white/10 rounded-xl p-2.5 pl-4 transition-all duration-200 w-full shadow-md focus-within:border-[#2563eb] dark:focus-within:border-blue-500 focus-within:ring-3 focus-within:ring-[#2563eb]/10 dark:focus-within:ring-blue-500/10">
+                        <div className="flex items-center gap-2 bg-white dark:bg-[#121218] border border-[#e5e7eb] dark:border-white/10 rounded-xl p-2.5 pl-4 transition-all duration-200 w-full shadow-md focus-within:border-[#2563eb] dark:focus-within:border-blue-500 focus-within:ring-3 focus-within:ring-[#2563eb]/10 dark:focus-within:ring-blue-500/10">
                             <textarea
                                 ref={inputRef}
                                 className="flex-1 bg-transparent border-none outline-none text-[#1a1a2e] dark:text-white text-[0.9rem] resize-none leading-relaxed max-h-[120px] overflow-y-auto placeholder-[#c4cad4] dark:placeholder-white/30"

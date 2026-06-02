@@ -113,26 +113,32 @@ const PersonalizationPage = () => {
     // Step navigation: 1, 2, 3
     const [step, setStep] = useState(1);
 
+    const userProfiles = useProfileStore((state) => state.userProfiles) || {};
     const setUserProfile = useProfileStore((state) => state.updateUserProfile);
     const getUserProfile = useProfileStore((state) => state.getUserProfile);
 
-    // Get current user profile if any
-    const currentProfile = getUserProfile();
-
     // Personalization State
-    const [educationLevel, setEducationLevel] = useState(
-        currentProfile.educationLevel || "undergraduate",
-    );
-    const [difficultyPreference, setDifficultyPreference] = useState(
-        currentProfile.difficultyPreference || "medium",
-    );
-    const [explanationStyle, setExplanationStyle] = useState(
-        currentProfile.explanationStyle || "concise",
-    );
-    const [pace, setPace] = useState(currentProfile.pace || "medium");
-    const [favouriteSubjects, setFavouriteSubjects] = useState(
-        currentProfile.favouriteSubjects || [],
-    );
+    const [educationLevel, setEducationLevel] = useState("undergraduate");
+    const [difficultyPreference, setDifficultyPreference] = useState("medium");
+    const [explanationStyle, setExplanationStyle] = useState("concise");
+    const [pace, setPace] = useState("medium");
+    const [favouriteSubjects, setFavouriteSubjects] = useState([]);
+
+    // Fetch user profile on mount
+    useEffect(() => {
+        getUserProfile();
+    }, [getUserProfile]);
+
+    // Sync state variables once profile is loaded
+    useEffect(() => {
+        if (userProfiles) {
+            if (userProfiles.educationLevel) setEducationLevel(userProfiles.educationLevel);
+            if (userProfiles.difficultyPreference) setDifficultyPreference(userProfiles.difficultyPreference);
+            if (userProfiles.explanationStyle) setExplanationStyle(userProfiles.explanationStyle);
+            if (userProfiles.pace) setPace(userProfiles.pace);
+            if (userProfiles.favouriteSubjects) setFavouriteSubjects(userProfiles.favouriteSubjects);
+        }
+    }, [userProfiles]);
 
     const handleSubjectToggle = (subject) => {
         setFavouriteSubjects((prev) =>
@@ -154,16 +160,15 @@ const PersonalizationPage = () => {
     };
 
     useEffect(() => {
-        const profile = getUserProfile();
         if (
-            profile.educationLevel &&
-            profile.difficultyPreference &&
-            profile.explanationStyle &&
-            profile.pace
+            userProfiles.educationLevel &&
+            userProfiles.difficultyPreference &&
+            userProfiles.explanationStyle &&
+            userProfiles.pace
         ) {
             navigate("/");
         }
-    }, [getUserProfile, navigate]);
+    }, [userProfiles, navigate]);
 
     return (
         <div className="min-h-screen bg-[#f8f7f4] text-[#1a1a2e] flex flex-col justify-between font-sans relative overflow-hidden">

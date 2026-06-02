@@ -2,16 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import {
     sendMessage,
     createChatSession,
-    uploadFile,
-    uploadURL,
-    uploadDrive,
-    uploadText,
-    listChatSessions,
     getChatHistory,
     logout,
 } from "../services/api";
 import {
-    clearGuestChatState,
     getChatSessionStorageKey,
     getGuestSessionIdForChatRequest,
     getOrCreateGuestSessionId,
@@ -22,26 +16,20 @@ import {
     FileText,
     Brain,
     Search,
-    MessageCircle,
     History,
     Settings,
-    Globe,
-    ClipboardList,
-    Plus,
-    X,
     MessageSquare,
     Loader2,
-    Menu,
-    FolderOpen,
     LogOut,
-    SquarePen,
     ChevronDown,
 } from "lucide-react";
 
-import { SiGoogledrive } from "react-icons/si";
 import { useProfileStore } from "@/store/profile-store";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/auth-store";
+import { useChatStore } from "@/store/chat-store";
+import Sidebar from "@/components/Sidebar";
+import SourcesSidebar from "@/components/SourcesSidebar";
 
 const SUBJECTS = [
     "Matematika",
@@ -65,80 +53,39 @@ const SUGGESTIONS = [
     { icon: <Search size={18} />, label: "Jelaskan konsep" },
 ];
 
-const SOURCE_TYPES = [
-    {
-        id: "file",
-        icon: <FileText size={18} />,
-        label: "Upload File",
-        desc: "PDF, DOCX, TXT",
-    },
-
-    {
-        id: "drive",
-        icon: <SiGoogledrive size={18} />,
-        label: "Google Drive",
-        desc: "Paste link Drive",
-    },
-
-    {
-        id: "url",
-        icon: <Globe size={18} />,
-        label: "Website URL",
-        desc: "Paste link website",
-    },
-
-    {
-        id: "text",
-        icon: <ClipboardList size={18} />,
-        label: "Copied Text",
-        desc: "Paste teks langsung",
-    },
-];
-
-const SOURCE_ICONS = {
-    file: <FileText size={20} className="text-blue-500" />,
-    drive: <SiGoogledrive size={20} className="text-green-600" />,
-    url: <Globe size={20} className="text-indigo-500" />,
-    text: <ClipboardList size={20} className="text-orange-500" />,
-};
-
 function ChatPage() {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const [activeMenu, setActiveMenu] = useState("chat");
-    const [sidebarOpen, setSidebarOpen] = useState(true);
-    const [sources, setSources] = useState([]);
-    const [showAddSource, setShowAddSource] = useState(false);
-    const [activeSourceType, setActiveSourceType] = useState("file");
-    const [sourceInput, setSourceInput] = useState("");
-    const [dragOver, setDragOver] = useState(false);
     const [theme, setTheme] = useState("light");
     const [focusedField, setFocusedField] = useState(null);
-    const [sessionsList, setSessionsList] = useState([]);
-    const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-    const [chatHistory, setChatHistory] = useState(() => {
-        const saved = localStorage.getItem("eduAssistHistory");
-        return saved ? JSON.parse(saved) : [];
-    });
 
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
-    const fileInputRef = useRef(null);
-
     const navigate = useNavigate();
 
     const accessToken = useAuthStore((state) => state.accessToken);
+    const user = useAuthStore((state) => state.user);
+    const userProfile = useProfileStore((state) => state.userProfiles);
+    const updateUserProfile = useProfileStore((state) => state.updateUserProfile);
+
+    // Global Chat State from Zustand Store
+    const {
+        activeMenu,
+        setActiveMenu,
+        sessionsList,
+        chatHistory,
+        isLoadingHistory,
+        setIsLoadingHistory,
+        saveChatToHistory,
+        loadSessions,
+    } = useChatStore();
 
     useEffect(() => {
         if (!accessToken) {
             navigate("/login");
         }
     }, [accessToken]);
-
-    const user = useAuthStore((state) => state.user);
-    const userProfile = useProfileStore((state) => state.userProfiles);
-    const updateUserProfile = useProfileStore((state) => state.updateUserProfile);
 
     function handleProfileUpdate(key, value) {
         updateUserProfile({
@@ -163,39 +110,8 @@ function ChatPage() {
     }, [messages]);
 
     useEffect(() => {
-        // async function loadSessions() {
-        //   try {
-        //     const guestSessionId = getGuestSessionIdForChatRequest()
-        //     const data = await listChatSessions(guestSessionId)
-        //     setSessionsList(data.sessions || [])
-        //   } catch (err) {
-        //     console.log('Gagal load sessions:', err.message)
-        //   }
-        // }
-        // loadSessions()
+        loadSessions();
     }, []);
-
-    function saveChatToHistory(currentMessages) {
-        if (currentMessages.length < 2) return;
-        const title =
-            currentMessages[0].content.slice(0, 30) +
-            (currentMessages[0].content.length > 30 ? "..." : "");
-        const newHistoryItem = {
-            id: Date.now(),
-            title,
-            messages: currentMessages,
-            timestamp: new Date().toLocaleString(),
-        };
-        const updatedHistory = [
-            newHistoryItem,
-            ...chatHistory.filter((h) => h.title !== title),
-        ];
-        setChatHistory(updatedHistory);
-        localStorage.setItem(
-            "eduAssistHistory",
-            JSON.stringify(updatedHistory),
-        );
-    }
 
     async function handleSend() {
         if (!input.trim() || isLoading) return;
@@ -210,13 +126,9 @@ function ChatPage() {
             let sessionId = sessionStorage.getItem(sessionStorageKey);
 
             const authenticated = isAuthenticatedUser();
-
             const guestSessionId = authenticated
                 ? null
                 : getOrCreateGuestSessionId();
-
-            console.log("Authenticated user ID:", user.id);
-            console.log("Guest Session ID for Chat Request:", guestSessionId);
 
             if (!sessionId) {
                 const session = await createChatSession({
@@ -236,8 +148,7 @@ function ChatPage() {
                 sessionId = session.conversationId;
                 sessionStorage.setItem(sessionStorageKey, sessionId);
 
-                const data = await listChatSessions(guestSessionId);
-                setSessionsList(data.sessions || []);
+                await loadSessions();
             }
 
             const result = await sendMessage(sessionId, userMsg.content);
@@ -318,387 +229,17 @@ function ChatPage() {
         }
     }
 
-    function addSource(source) {
-        setSources((prev) => [...prev, source]);
-        setShowAddSource(false);
-        setSourceInput("");
-    }
-
-    async function handleFileChange(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        const profile = JSON.parse(localStorage.getItem("userProfile") || "{}");
-        const tempId = Date.now();
-        setSources((prev) => [
-            ...prev,
-            {
-                id: tempId,
-                type: "file",
-                name: file.name,
-                meta: "Uploading...",
-            },
-        ]);
-        setShowAddSource(false);
-        try {
-            await uploadFile(file, profile.userId || "guest");
-            setSources((prev) =>
-                prev.map((s) =>
-                    s.id === tempId
-                        ? { ...s, meta: `${(file.size / 1024).toFixed(1)} KB` }
-                        : s,
-                ),
-            );
-        } catch (err) {
-            setSources((prev) => prev.filter((s) => s.id !== tempId));
-            alert(`Upload gagal: ${err.message}`);
-        }
-    }
-
-    async function handleAddSourceInput() {
-        if (!sourceInput.trim()) return;
-        const profile = JSON.parse(localStorage.getItem("userProfile") || "{}");
-        const userId = profile.userId || "guest";
-        try {
-            if (activeSourceType === "drive") {
-                await uploadDrive(sourceInput, userId);
-                addSource({
-                    id: Date.now(),
-                    type: "drive",
-                    name: "Google Drive",
-                    meta: sourceInput,
-                });
-            } else if (activeSourceType === "url") {
-                await uploadURL(sourceInput, userId);
-                addSource({
-                    id: Date.now(),
-                    type: "url",
-                    name: sourceInput,
-                    meta: "Website",
-                });
-            } else if (activeSourceType === "text") {
-                await uploadText(sourceInput, userId);
-                addSource({
-                    id: Date.now(),
-                    type: "text",
-                    name:
-                        sourceInput.slice(0, 40) +
-                        (sourceInput.length > 40 ? "..." : ""),
-                    meta: `${sourceInput.length} karakter`,
-                });
-            }
-        } catch (err) {
-            alert(`Gagal tambah sumber: ${err.message}`);
-        }
-    }
-
-    function handleDrop(e) {
-        e.preventDefault();
-        setDragOver(false);
-        const file = e.dataTransfer.files[0];
-        if (!file) return;
-        const tempId = Date.now();
-        setSources((prev) => [
-            ...prev,
-            {
-                id: tempId,
-                type: "file",
-                name: file.name,
-                meta: "Uploading...",
-            },
-        ]);
-        setShowAddSource(false);
-        const profile = JSON.parse(localStorage.getItem("userProfile") || "{}");
-        uploadFile(file, profile.userId || "guest")
-            .then(() =>
-                setSources((prev) =>
-                    prev.map((s) =>
-                        s.id === tempId
-                            ? {
-                                  ...s,
-                                  meta: `${(file.size / 1024).toFixed(1)} KB`,
-                              }
-                            : s,
-                    ),
-                ),
-            )
-            .catch((err) => {
-                setSources((prev) => prev.filter((s) => s.id !== tempId));
-                alert(`Upload gagal: ${err.message}`);
-            });
-    }
-
-    function deleteSource(id) {
-        setSources((prev) => prev.filter((s) => s.id !== id));
-    }
-
     return (
         <div
             className={`flex h-screen bg-[#f8f7f4] text-[#1a1a2e] font-sans overflow-hidden transition-colors duration-250 ${theme === "dark" ? "dark bg-[#0a0a0f] text-white" : ""}`}
         >
-            <aside
-                className={`bg-white dark:bg-[#121218] border-r border-[#e5e7eb] dark:border-white/10 flex flex-col py-5 gap-1 transition-all duration-250 overflow-hidden relative z-20 ${sidebarOpen ? "w-[220px] min-w-[220px] px-4 max-[768px]:absolute max-[768px]:h-full" : "w-14 min-w-14 px-0 flex flex-col items-center max-[768px]:w-0 max-[768px]:min-w-0 max-[768px]:p-0"}`}
-            >
-                <div
-                    className={`flex items-center mb-4 ${sidebarOpen ? "justify-between px-2 w-full" : "justify-center w-auto"}`}
-                >
-                    <img
-                        src="/icons/image.png"
-                        alt="EduAssist"
-                        className={`w-32 object-contain transition-all duration-200 ${sidebarOpen ? "block" : "hidden"}`}
-                    />
-                    <button
-                        className="bg-transparent border-none text-slate-500 dark:text-white/70 cursor-pointer text-lg p-1 rounded-md transition-all duration-200 shrink-0 hover:text-slate-800 hover:bg-slate-100 dark:hover:text-white dark:hover:bg-white/10 flex items-center justify-center"
-                        onClick={() => setSidebarOpen(!sidebarOpen)}
-                    >
-                        <Menu size={20} />
-                    </button>
-                </div>
-                <button
-                    className={`flex items-center bg-[#2563eb] dark:bg-blue-600 text-white text-[0.85rem] font-semibold cursor-pointer mb-3 transition-all duration-200 whitespace-nowrap hover:bg-[#2563eb]/90 dark:hover:bg-blue-500 shadow-sm border-none ${sidebarOpen ? "gap-2.5 py-2.5 px-3 rounded-lg w-full" : "w-10 h-10 p-0 rounded-full justify-center shrink-0"}`}
-                    onClick={handleNewChat}
-                >
-                    <SquarePen size={18} className="shrink-0" />
-                    <span className={sidebarOpen ? "block" : "hidden"}>
-                        New Chat
-                    </span>
-                </button>
-                <nav
-                    className={`flex flex-col gap-0.5 ${sidebarOpen ? "w-full" : "items-center w-auto"}`}
-                >
-                    {[
-                        {
-                            id: "chat",
-                            icon: <MessageCircle size={18} />,
-                            label: "Chat",
-                        },
-                        {
-                            id: "history",
-                            icon: <History size={18} />,
-                            label: "History",
-                        },
-                        {
-                            id: "settings",
-                            icon: <Settings size={18} />,
-                            label: "Settings",
-                        },
-                    ].map((item) => (
-                        <button
-                            key={item.id}
-                            className={`flex items-center rounded-lg border-none bg-transparent text-slate-600 dark:text-white/60 text-[0.85rem] cursor-pointer transition-all duration-200 whitespace-nowrap hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white ${sidebarOpen ? "gap-3 py-2.5 px-3 text-left w-full" : "w-10 h-10 p-0 justify-center shrink-0"} ${activeMenu === item.id ? "bg-slate-100 dark:bg-white/10 text-[#2563eb] dark:text-blue-400 font-semibold shadow-sm" : ""}`}
-                            onClick={() => setActiveMenu(item.id)}
-                        >
-                            <span className="text-base shrink-0">
-                                {item.icon}
-                            </span>
-                            <span
-                                className={`text-[0.85rem] whitespace-nowrap ${sidebarOpen ? "block" : "hidden"}`}
-                            >
-                                {item.label}
-                            </span>
-                        </button>
-                    ))}
-                </nav>
-                <div
-                    className={`flex-1 py-3 px-2 overflow-hidden transition-all duration-200 ${sidebarOpen ? "block" : "hidden"}`}
-                >
-                    <p className="text-[0.7rem] font-semibold tracking-wider uppercase text-slate-400 dark:text-white/30 mb-2 px-1">
-                        Recent
-                    </p>
-                    <div className="overflow-y-auto max-h-[calc(100vh-320px)] scrollbar-none">
-                        {sessionsList.length > 0 ? (
-                            sessionsList.slice(0, 5).map((session) => (
-                                <button
-                                    key={session.id || session.conversationId}
-                                    className="text-[0.8rem] text-slate-500 dark:text-white/50 py-1.5 px-2 rounded-lg cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap transition-all duration-200 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white text-left w-full flex items-center gap-1.5"
-                                    onClick={() => loadHistory(session)}
-                                >
-                                    <MessageSquare
-                                        size={14}
-                                        className="shrink-0 text-slate-400 dark:text-white/40"
-                                    />
-                                    <span className="overflow-hidden text-ellipsis whitespace-nowrap">
-                                        {session.title || "Percakapan"}
-                                    </span>
-                                </button>
-                            ))
-                        ) : chatHistory.length > 0 ? (
-                            chatHistory.map((item) => (
-                                <button
-                                    key={item.id}
-                                    className="text-[0.8rem] text-slate-500 dark:text-white/50 py-1.5 px-2 rounded-lg cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap transition-all duration-200 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white text-left w-full flex items-center gap-1.5"
-                                    onClick={() => loadHistory(item)}
-                                >
-                                    <MessageSquare
-                                        size={14}
-                                        className="shrink-0 text-slate-400 dark:text-white/40"
-                                    />
-                                    <span className="overflow-hidden text-ellipsis whitespace-nowrap">
-                                        {item.title}
-                                    </span>
-                                </button>
-                            ))
-                        ) : (
-                            <p className="text-[0.78rem] text-slate-400 dark:text-white/30 py-1 px-2">
-                                Belum ada percakapan
-                            </p>
-                        )}
-                    </div>
-                </div>
-                <div
-                    className={`flex items-center border-t border-slate-200 dark:border-white/10 mt-auto cursor-pointer transition-all duration-200 hover:bg-slate-100 dark:hover:bg-white/5 ${sidebarOpen ? "gap-3 py-3 px-2 rounded-lg w-full" : "w-10 h-10 p-0 rounded-full justify-center shrink-0 border-t-0"}`}
-                >
-                    <div className="w-8 h-8 rounded-full bg-[#2563eb] text-white flex items-center justify-center text-[0.75rem] font-bold shrink-0">
-                        {initials}
-                    </div>
-                    <div
-                        className={`transition-all duration-200 ${sidebarOpen ? "block" : "hidden"} min-w-0`}
-                    >
-                        <p className="text-[0.82rem] font-semibold text-slate-800 dark:text-white whitespace-nowrap overflow-hidden text-ellipsis">
-                            {user.name || "User"}
-                        </p>
-                        <p className="text-[0.72rem] text-slate-500 dark:text-white/45 whitespace-nowrap overflow-hidden text-ellipsis">
-                            {userProfile.educationLevel} ·{" "}
-                            {userProfile.explanationStyle}
-                        </p>
-                    </div>
-                </div>
-            </aside>
+            <Sidebar
+                handleNewChat={handleNewChat}
+                onNewChat={handleNewChat}
+                onLoadHistory={loadHistory}
+            />
 
-            {activeMenu === "chat" && (
-                <div className="w-[280px] min-w-[280px] bg-white dark:bg-[#121218] border-r border-[#e5e7eb] dark:border-white/10 flex flex-col py-5 px-4 gap-3 overflow-y-auto max-[900px]:hidden scrollbar-thin">
-                    <div className="flex items-center gap-2">
-                        <h2 className="text-base font-bold text-[#1a1a2e] dark:text-white">
-                            Sources
-                        </h2>
-                        <span className="bg-[#eff6ff] dark:bg-white/10 text-[#2563eb] dark:text-blue-400 text-[0.72rem] font-semibold py-0.5 px-2 rounded-full">
-                            {sources.length}
-                        </span>
-                        <button
-                            className="flex items-center justify-center gap-2 p-2.5 rounded-lg border border-dashed border-[#d1d5db] dark:border-white/20 bg-transparent text-[#6b7280] dark:text-white/60 text-[0.85rem] cursor-pointer transition-all duration-200 w-full hover:border-[#2563eb] hover:text-[#2563eb] hover:bg-[#eff6ff] dark:hover:bg-white/5"
-                            onClick={() => setShowAddSource(!showAddSource)}
-                        >
-                            <Plus size={16} className="shrink-0" />
-                            <span>Tambah Sumber</span>
-                        </button>
-                    </div>
-                    {showAddSource && (
-                        <div className="flex flex-col gap-2.5 bg-[#f9fafb] dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 rounded-xl p-3">
-                            <div className="flex gap-1.5">
-                                {SOURCE_TYPES.map((t) => (
-                                    <button
-                                        key={t.id}
-                                        className={`flex-1 p-1.5 rounded-lg border border-[#e5e7eb] dark:border-white/10 bg-white dark:bg-[#121218] text-[#6b7280] dark:text-white/60 text-[1rem] cursor-pointer transition-all duration-200 flex items-center justify-center hover:bg-[#f3f4f6] dark:hover:bg-white/5 hover:text-[#1a1a2e] dark:hover:text-white ${activeSourceType === t.id ? "bg-[#eff6ff] dark:bg-blue-900/30 border-[#2563eb] dark:border-blue-500 text-[#2563eb] dark:text-blue-400" : ""}`}
-                                        onClick={() =>
-                                            setActiveSourceType(t.id)
-                                        }
-                                    >
-                                        {t.icon}
-                                    </button>
-                                ))}
-                            </div>
-                            {activeSourceType === "file" && (
-                                <div
-                                    className={`border border-dashed border-[#d1d5db] dark:border-white/20 rounded-lg p-5 flex flex-col items-center gap-1 cursor-pointer transition-all duration-200 text-center bg-white dark:bg-[#121218] hover:border-[#2563eb] hover:bg-[#eff6ff] dark:hover:bg-white/5 ${dragOver ? "border-[#2563eb] bg-[#eff6ff] dark:bg-white/5" : ""}`}
-                                    onDragOver={(e) => {
-                                        e.preventDefault();
-                                        setDragOver(true);
-                                    }}
-                                    onDragLeave={() => setDragOver(false)}
-                                    onDrop={handleDrop}
-                                    onClick={() =>
-                                        fileInputRef.current?.click()
-                                    }
-                                >
-                                    <FileText
-                                        size={32}
-                                        className="text-slate-400 mb-1"
-                                    />
-                                    <p className="text-[0.8rem] text-[#6b7280] dark:text-white/60">
-                                        Drop file atau klik untuk upload
-                                    </p>
-                                    <p className="text-[0.72rem] text-[#9ca3af]">
-                                        PDF, DOCX, TXT
-                                    </p>
-                                    <input
-                                        ref={fileInputRef}
-                                        type="file"
-                                        accept=".pdf,.docx,.txt"
-                                        className="hidden"
-                                        onChange={handleFileChange}
-                                    />
-                                </div>
-                            )}
-                            {activeSourceType !== "file" && (
-                                <div className="flex flex-col gap-1.5">
-                                    <input
-                                        className="bg-white dark:bg-[#121218] border border-[#e5e7eb] dark:border-white/10 rounded-lg py-2 px-3 text-[#1a1a2e] dark:text-white text-[0.82rem] outline-none transition-all duration-200 w-full placeholder-[#c4cad4] dark:placeholder-white/30 focus:border-[#2563eb] dark:focus:border-blue-500 focus:ring-3 focus:ring-[#2563eb]/10 dark:focus:ring-blue-500/10"
-                                        placeholder={
-                                            activeSourceType === "drive"
-                                                ? "Paste link Google Drive..."
-                                                : activeSourceType === "url"
-                                                  ? "Paste URL website..."
-                                                  : "Paste teks di sini..."
-                                        }
-                                        value={sourceInput}
-                                        onChange={(e) =>
-                                            setSourceInput(e.target.value)
-                                        }
-                                    />
-                                    <button
-                                        className="py-2 rounded-lg border-none bg-[#2563eb] text-white text-[0.82rem] font-semibold cursor-pointer transition-all duration-200 hover:opacity-90"
-                                        onClick={handleAddSourceInput}
-                                    >
-                                        Tambah
-                                    </button>
-                                </div>
-                            )}
-                        </div>
-                    )}
-                    {sources.length === 0 ? (
-                        <div className="flex-1 flex flex-col items-center justify-center gap-1.5 text-center py-8 px-2">
-                            <FolderOpen
-                                size={40}
-                                className="text-slate-300 dark:text-white/20 mb-1"
-                            />
-                            <p className="text-[0.875rem] font-semibold text-[#6b7280] dark:text-white/60">
-                                Belum ada sumber
-                            </p>
-                            <p className="text-[0.78rem] text-[#9ca3af] dark:text-white/40 leading-relaxed">
-                                Tambah file, link, atau teks sebagai konteks RAG
-                            </p>
-                        </div>
-                    ) : (
-                        <div className="grid grid-cols-2 gap-2">
-                            {sources.map((source) => (
-                                <div
-                                    key={source.id}
-                                    className="bg-[#f9fafb] dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 rounded-lg p-3 flex flex-col gap-1.5 relative transition-all duration-200 hover:border-[#2563eb] hover:bg-[#eff6ff] dark:hover:bg-white/5 group"
-                                >
-                                    <div className="shrink-0">
-                                        {SOURCE_ICONS[source.type] || (
-                                            <FileText size={20} />
-                                        )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-[0.75rem] font-medium text-[#1a1a2e] dark:text-white overflow-hidden text-ellipsis whitespace-nowrap">
-                                            {source.name}
-                                        </p>
-                                        <p className="text-[0.68rem] text-[#9ca3af] overflow-hidden text-ellipsis whitespace-nowrap">
-                                            {source.meta}
-                                        </p>
-                                    </div>
-                                    <button
-                                        className="absolute top-1 right-1 w-[18px] h-[18px] rounded-full border-none bg-[#fee2e2] dark:bg-red-950/50 text-[#ef4444] text-[0.85rem] cursor-pointer hidden group-hover:flex items-center justify-center transition-colors duration-200 hover:bg-[#fecaca] dark:hover:bg-red-900"
-                                        onClick={() => deleteSource(source.id)}
-                                    >
-                                        ×
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
+            {activeMenu === "chat" && <SourcesSidebar />}
 
             <main className="flex-1 flex flex-col overflow-hidden relative bg-[#f8f7f4] dark:bg-[#0a0a0f]">
                 {activeMenu === "history" && (

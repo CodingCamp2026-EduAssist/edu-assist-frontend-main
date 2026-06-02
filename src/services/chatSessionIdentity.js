@@ -1,3 +1,5 @@
+import { useAuthStore } from '../store/auth-store'
+
 const GUEST_SESSION_KEY = 'guestSessionId'
 const LEGACY_SESSION_KEY = 'sessionId'
 const CHAT_SESSION_PREFIX = 'eduAssistChatSession'
@@ -19,7 +21,7 @@ function createUuid() {
 }
 
 export function isAuthenticatedUser() {
-  const accessToken = localStorage.getItem('accessToken')
+  const accessToken = useAuthStore.getState().accessToken
   console.log('Checking authentication status. Access Token:', accessToken)
   return !!accessToken
 }

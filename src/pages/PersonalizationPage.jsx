@@ -118,10 +118,10 @@ const PersonalizationPage = () => {
     const getUserProfile = useProfileStore((state) => state.getUserProfile);
 
     // Personalization State
-    const [educationLevel, setEducationLevel] = useState("undergraduate");
-    const [difficultyPreference, setDifficultyPreference] = useState("medium");
+    const [educationLevel, setEducationLevel] = useState("high_school");
+    const [difficultyPreference, setDifficultyPreference] = useState("easy");
     const [explanationStyle, setExplanationStyle] = useState("concise");
-    const [pace, setPace] = useState("medium");
+    const [pace, setPace] = useState("slow");
     const [favouriteSubjects, setFavouriteSubjects] = useState([]);
 
     // Fetch user profile on mount

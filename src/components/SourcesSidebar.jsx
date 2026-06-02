@@ -1,5 +1,13 @@
 import React, { useRef } from "react";
-import { Plus, FolderOpen, FileText, Globe, ClipboardList, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+    Plus,
+    FolderOpen,
+    FileText,
+    Globe,
+    ClipboardList,
+    ChevronLeft,
+    ChevronRight,
+} from "lucide-react";
 import { SiGoogledrive } from "react-icons/si";
 import { useSourcesStore } from "@/store/sources-store";
 import { useAuthStore } from "@/store/auth-store";
@@ -47,16 +55,41 @@ export default function SourcesSidebar() {
     };
 
     return (
-        <div className={`bg-white dark:bg-[#121218] border-r border-[#e5e7eb] dark:border-white/10 flex flex-col py-5 transition-all duration-250 overflow-y-auto max-[900px]:hidden scrollbar-thin ${sourcesOpen ? "w-[280px] min-w-[280px] px-4 gap-3" : "w-14 min-w-14 px-0 gap-4 flex flex-col items-center"}`}>
+        <div
+            className={`bg-white dark:bg-[#121218] border-r border-[#e5e7eb] dark:border-white/10 flex flex-col py-5 transition-all duration-250 overflow-y-auto max-[900px]:hidden scrollbar-thin relative ${sourcesOpen ? "w-[280px] min-w-[280px] px-4 gap-3" : "w-14 min-w-14 px-0 gap-4 flex flex-col items-center"}`}
+            onDragOver={(e) => {
+                e.preventDefault();
+                setDragOver(true);
+            }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+        >
+            {/* Full Sidebar Drag-Over Overlay */}
+            {dragOver && (
+                <div className="absolute inset-0 bg-[#eff6ff]/95 dark:bg-blue-950/90 backdrop-blur-[2px] z-50 flex flex-col items-center justify-center border-2 border-dashed border-[#2563eb] rounded-r-xl pointer-events-none p-4 text-center">
+                    <FileText size={44} className="text-[#2563eb] animate-bounce mb-2" />
+                    <p className="text-[0.875rem] font-bold text-[#2563eb] dark:text-blue-400">
+                        Lepaskan PDF untuk Upload!
+                    </p>
+                </div>
+            )}
+
             {/* Header */}
-            <div className={`flex items-center w-full ${sourcesOpen ? "justify-between" : "flex-col gap-2 justify-center"}`}>
-                <div className={`flex items-center gap-2 ${sourcesOpen ? "" : "flex-col"}`}>
+            <div
+                className={`flex items-center w-full ${sourcesOpen ? "justify-between" : "flex-col gap-2 justify-center"}`}
+            >
+                <div
+                    className={`flex items-center gap-2 ${sourcesOpen ? "" : "flex-col"}`}
+                >
                     {sourcesOpen ? (
                         <h2 className="text-base font-bold text-[#1a1a2e] dark:text-white">
                             Sources
                         </h2>
                     ) : (
-                        <FolderOpen size={20} className="text-slate-400 dark:text-white/40" />
+                        <FolderOpen
+                            size={20}
+                            className="text-slate-400 dark:text-white/40"
+                        />
                     )}
                     <span className="bg-[#eff6ff] dark:bg-white/10 text-[#2563eb] dark:text-blue-400 text-[0.72rem] font-semibold py-0.5 px-2 rounded-full shrink-0">
                         {sources.length}
@@ -66,7 +99,11 @@ export default function SourcesSidebar() {
                     onClick={() => setSourcesOpen(!sourcesOpen)}
                     className="bg-transparent border-none text-slate-400 hover:text-slate-700 dark:hover:text-white cursor-pointer p-1 rounded-md transition-colors duration-200 flex items-center justify-center shrink-0 hover:bg-slate-100 dark:hover:bg-white/5"
                 >
-                    {sourcesOpen ? <ChevronLeft size={18} /> : <ChevronRight size={18} />}
+                    {sourcesOpen ? (
+                        <ChevronLeft size={18} />
+                    ) : (
+                        <ChevronRight size={18} />
+                    )}
                 </button>
             </div>
 
@@ -86,27 +123,15 @@ export default function SourcesSidebar() {
             {sourcesOpen && showAddSource && (
                 <div className="flex flex-col gap-2.5 bg-[#f9fafb] dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 rounded-xl p-3 shrink-0">
                     <div
-                        className={`border border-dashed rounded-lg p-5 flex flex-col items-center gap-1 cursor-pointer transition-all duration-300 transform text-center bg-white dark:bg-[#121218] ${
-                            dragOver
-                                ? "border-[#2563eb] bg-[#eff6ff]/80 dark:bg-blue-900/10 scale-[1.03] shadow-[0_0_15px_rgba(37,99,235,0.25)] animate-pulse"
-                                : "border-[#d1d5db] dark:border-white/20 hover:border-[#2563eb] hover:bg-[#eff6ff]/30 dark:hover:bg-white/5"
-                        }`}
-                        onDragOver={(e) => {
-                            e.preventDefault();
-                            setDragOver(true);
-                        }}
-                        onDragLeave={() => setDragOver(false)}
-                        onDrop={handleDrop}
+                        className="border border-dashed border-[#d1d5db] dark:border-white/20 rounded-lg h-36 p-5 flex flex-col items-center gap-1 cursor-pointer transition-all duration-300 transform text-center bg-white dark:bg-[#121218] hover:border-[#2563eb] hover:bg-[#eff6ff]/30 dark:hover:bg-white/5"
                         onClick={() => fileInputRef.current?.click()}
                     >
                         <FileText
                             size={32}
-                            className={`transition-transform duration-300 ${
-                                dragOver ? "text-[#2563eb] scale-110" : "text-slate-400"
-                            } mb-1`}
+                            className="text-slate-400 mb-1"
                         />
                         <p className="text-[0.8rem] font-medium text-[#6b7280] dark:text-white/60">
-                            {dragOver ? "Lepaskan file PDF di sini!" : "Drop file atau klik untuk upload"}
+                            Drop file atau klik untuk upload
                         </p>
                         <p className="text-[0.72rem] text-[#9ca3af]">
                             Hanya PDF
@@ -126,7 +151,10 @@ export default function SourcesSidebar() {
             {sources.length === 0 ? (
                 sourcesOpen ? (
                     <div className="flex-1 flex flex-col items-center justify-center gap-1.5 text-center py-8 px-2">
-                        <FolderOpen size={40} className="text-slate-300 dark:text-white/20 mb-1" />
+                        <FolderOpen
+                            size={40}
+                            className="text-slate-300 dark:text-white/20 mb-1"
+                        />
                         <p className="text-[0.875rem] font-semibold text-[#6b7280] dark:text-white/60">
                             Belum ada sumber
                         </p>
@@ -147,7 +175,9 @@ export default function SourcesSidebar() {
                             className="bg-[#f9fafb] dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 rounded-lg p-3 flex flex-col gap-1.5 relative transition-all duration-200 hover:border-[#2563eb] hover:bg-[#eff6ff] dark:hover:bg-white/5 group"
                         >
                             <div className="shrink-0">
-                                {SOURCE_ICONS[source.type] || <FileText size={20} />}
+                                {SOURCE_ICONS[source.type] || (
+                                    <FileText size={20} />
+                                )}
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-[0.75rem] font-medium text-[#1a1a2e] dark:text-white overflow-hidden text-ellipsis whitespace-nowrap">
@@ -175,7 +205,9 @@ export default function SourcesSidebar() {
                             className="w-10 h-10 rounded-lg bg-white dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 flex items-center justify-center hover:border-[#2563eb] dark:hover:border-blue-500 cursor-pointer shrink-0 transition-colors duration-200"
                             onClick={() => setSourcesOpen(true)}
                         >
-                            {SOURCE_ICONS[source.type] || <FileText size={18} />}
+                            {SOURCE_ICONS[source.type] || (
+                                <FileText size={18} />
+                            )}
                         </div>
                     ))}
                 </div>

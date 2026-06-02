@@ -1,11 +1,13 @@
-import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import OnboardingPage from "./pages/OnboardingPage";
 import AuthCallback from "./pages/AuthCallback";
+import InitialChatPage from "./pages/InitialChatPage";
 import ChatPage from "./pages/ChatPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import { useEffect } from "react";
 import PersonalizationPage from "./pages/PersonalizationPage";
 import { useAuthStore } from "./store/auth-store";
+import ChatLayout from "./layouts/ChatLayout";
 
 function App() {
     const accessToken = useAuthStore((state) => state.accessToken);
@@ -21,7 +23,12 @@ function App() {
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/" element={<ChatPage />} />
+                {/* Chat layout route */}
+                <Route element={<ChatLayout />}>
+                    <Route path="/" element={<InitialChatPage />} />
+                    <Route path="/chat/:sessionId" element={<ChatPage />} />
+                </Route>
+
                 <Route path="/login" element={<OnboardingPage />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
                 <Route

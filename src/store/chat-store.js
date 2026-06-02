@@ -11,12 +11,14 @@ export const useChatStore = create(
             sessionsList: [],
             isLoadingHistory: false,
             chatHistory: [],
+            theme: "light",
 
             setSidebarOpen: (open) => set({ sidebarOpen: open }),
             setActiveMenu: (menu) => set({ activeMenu: menu }),
             setSessionsList: (sessionsList) => set({ sessionsList }),
             setIsLoadingHistory: (isLoadingHistory) => set({ isLoadingHistory }),
             setChatHistory: (chatHistory) => set({ chatHistory }),
+            setTheme: (theme) => set({ theme }),
 
             loadSessions: async () => {
                 try {
@@ -51,6 +53,7 @@ export const useChatStore = create(
             name: "edu-assist-chat-history",
             partialize: (state) => ({
                 chatHistory: state.chatHistory,
+                theme: state.theme,
             }),
         }
     )

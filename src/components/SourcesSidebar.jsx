@@ -16,7 +16,7 @@ const SOURCE_TYPES_LIST = [
         id: "file",
         icon: <FileText size={18} />,
         label: "Upload File",
-        desc: "PDF, DOCX, TXT",
+        desc: "PDF",
     },
     {
         id: "drive",
@@ -62,6 +62,10 @@ export default function SourcesSidebar() {
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (!file) return;
+        if (!file.name.toLowerCase().endsWith(".pdf")) {
+            alert("Hanya file PDF yang diperbolehkan!");
+            return;
+        }
         handleFileUpload(file, user?.id || "guest");
     };
 
@@ -70,6 +74,10 @@ export default function SourcesSidebar() {
         setDragOver(false);
         const file = e.dataTransfer.files[0];
         if (!file) return;
+        if (!file.name.toLowerCase().endsWith(".pdf")) {
+            alert("Hanya file PDF yang diperbolehkan!");
+            return;
+        }
         handleFileUpload(file, user?.id || "guest");
     };
 
@@ -129,7 +137,11 @@ export default function SourcesSidebar() {
                     </div>
                     {activeSourceType === "file" && (
                         <div
-                            className={`border border-dashed border-[#d1d5db] dark:border-white/20 rounded-lg p-5 flex flex-col items-center gap-1 cursor-pointer transition-all duration-200 text-center bg-white dark:bg-[#121218] hover:border-[#2563eb] hover:bg-[#eff6ff] dark:hover:bg-white/5 ${dragOver ? "border-[#2563eb] bg-[#eff6ff] dark:bg-white/5" : ""}`}
+                            className={`border border-dashed rounded-lg p-5 flex flex-col items-center gap-1 cursor-pointer transition-all duration-300 transform text-center bg-white dark:bg-[#121218] ${
+                                dragOver
+                                    ? "border-[#2563eb] bg-[#eff6ff]/80 dark:bg-blue-900/10 scale-[1.03] shadow-[0_0_15px_rgba(37,99,235,0.25)] animate-pulse"
+                                    : "border-[#d1d5db] dark:border-white/20 hover:border-[#2563eb] hover:bg-[#eff6ff]/30 dark:hover:bg-white/5"
+                            }`}
                             onDragOver={(e) => {
                                 e.preventDefault();
                                 setDragOver(true);
@@ -138,17 +150,22 @@ export default function SourcesSidebar() {
                             onDrop={handleDrop}
                             onClick={() => fileInputRef.current?.click()}
                         >
-                            <FileText size={32} className="text-slate-400 mb-1" />
-                            <p className="text-[0.8rem] text-[#6b7280] dark:text-white/60">
-                                Drop file atau klik untuk upload
+                            <FileText
+                                size={32}
+                                className={`transition-transform duration-300 ${
+                                    dragOver ? "text-[#2563eb] scale-110" : "text-slate-400"
+                                } mb-1`}
+                            />
+                            <p className="text-[0.8rem] font-medium text-[#6b7280] dark:text-white/60">
+                                {dragOver ? "Lepaskan file PDF di sini!" : "Drop file atau klik untuk upload"}
                             </p>
                             <p className="text-[0.72rem] text-[#9ca3af]">
-                                PDF, DOCX, TXT
+                                Hanya PDF
                             </p>
                             <input
                                 ref={fileInputRef}
                                 type="file"
-                                accept=".pdf,.docx,.txt"
+                                accept=".pdf"
                                 className="hidden"
                                 onChange={handleFileChange}
                             />

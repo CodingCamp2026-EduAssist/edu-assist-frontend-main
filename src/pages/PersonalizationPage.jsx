@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     BookOpen,
@@ -152,6 +152,19 @@ const PersonalizationPage = () => {
         });
         navigate("/");
     };
+
+    useEffect(() => {
+        const profile = getUserProfile();
+        if (
+            profile.educationLevel &&
+            profile.difficultyPreference &&
+            profile.explanationStyle &&
+            profile.pace &&
+            profile.favouriteSubjects
+        ) {
+            navigate("/");
+        }
+    }, [getUserProfile, navigate]);
 
     return (
         <div className="min-h-screen bg-[#f8f7f4] text-[#1a1a2e] flex flex-col justify-between font-sans relative overflow-hidden">

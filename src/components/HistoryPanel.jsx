@@ -2,8 +2,6 @@ import React from "react";
 import { History, MessageSquare, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useChatStore } from "@/store/chat-store";
-import { getChatHistory } from "../services/api";
-import { getGuestSessionIdForChatRequest } from "../services/chatSessionIdentity";
 
 export default function HistoryPanel() {
     const navigate = useNavigate();
@@ -64,7 +62,9 @@ export default function HistoryPanel() {
                                 </p>
                                 <p className="text-[0.75rem] text-[#9ca3af] mt-1">
                                     {session.createdAt
-                                        ? new Date(session.createdAt).toLocaleString()
+                                        ? new Date(
+                                              session.createdAt,
+                                          ).toLocaleString()
                                         : ""}
                                 </p>
                             </div>

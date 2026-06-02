@@ -11,7 +11,7 @@ export default function ProfileSection() {
 
     const sidebarOpen = useChatStore((s) => s.sidebarOpen);
     const setActiveMenu = useChatStore((s) => s.setActiveMenu);
-    
+
     const user = useAuthStore((s) => s.user);
     const userProfile = useProfileStore((s) => s.userProfiles) || {};
 
@@ -26,12 +26,16 @@ export default function ProfileSection() {
 
     useEffect(() => {
         function handleClickOutside(event) {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+            if (
+                dropdownRef.current &&
+                !dropdownRef.current.contains(event.target)
+            ) {
                 setIsOpen(false);
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
+        return () =>
+            document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
     const handleLogout = async () => {
@@ -44,10 +48,15 @@ export default function ProfileSection() {
     };
 
     return (
-        <div className="relative w-full flex justify-center mt-auto" ref={dropdownRef}>
+        <div
+            className="relative w-full flex justify-center mt-auto"
+            ref={dropdownRef}
+        >
             {/* Popover Dropdown */}
             {isOpen && (
-                <div className={`absolute bottom-12 bg-white dark:bg-[#121218] border border-[#e5e7eb] dark:border-white/10 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.1)] py-1.5 z-50 flex flex-col gap-0.5 ${sidebarOpen ? "w-full left-0 px-1" : "w-36 left-full ml-2"}`}>
+                <div
+                    className={`absolute bottom-12 bg-white dark:bg-[#121218] border border-[#e5e7eb] dark:border-white/10 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.1)] py-1.5 z-50 flex flex-col gap-0.5 ${sidebarOpen ? "w-full left-0 px-1" : "w-36 left-full ml-2"}`}
+                >
                     <button
                         onClick={() => {
                             setActiveMenu("settings");
@@ -75,17 +84,23 @@ export default function ProfileSection() {
             >
                 <div className="w-8 h-8 rounded-full bg-[#2563eb] text-white flex items-center justify-center text-[0.75rem] font-bold shrink-0 overflow-hidden">
                     {user.foto ? (
-                        <img src={user.foto} alt="avatar" className="w-8 h-8 rounded-full object-cover" />
+                        <img
+                            src={user.foto}
+                            alt="avatar"
+                            className="w-8 h-8 rounded-full object-cover"
+                        />
                     ) : (
                         initials
                     )}
                 </div>
-                <div className={`transition-all duration-200 ${sidebarOpen ? "block" : "hidden"} min-w-0`}>
+                <div
+                    className={`transition-all duration-200 ${sidebarOpen ? "block" : "hidden"} min-w-0`}
+                >
                     <p className="text-[0.82rem] font-semibold text-slate-800 dark:text-white whitespace-nowrap overflow-hidden text-ellipsis">
                         {user.name || "User"}
                     </p>
                     <p className="text-[0.72rem] text-slate-500 dark:text-white/45 whitespace-nowrap overflow-hidden text-ellipsis">
-                        {userProfile.educationLevel || "undergraduate"} · {userProfile.explanationStyle || "concise"}
+                        {user.email || "user@gmail.com"}
                     </p>
                 </div>
             </div>

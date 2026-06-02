@@ -5,9 +5,15 @@ import SourcesSidebar from "@/components/SourcesSidebar";
 import HistoryPanel from "@/components/HistoryPanel";
 import SettingsPanel from "@/components/SettingsPanel";
 import { useChatStore } from "@/store/chat-store";
+import { useEffect } from "react";
 
 export default function ChatLayout() {
     const { activeMenu, theme } = useChatStore();
+    const loadSessions = useChatStore((s) => s.loadSessions);
+
+    useEffect(() => {
+        loadSessions();
+    }, []);
 
     return (
         <div

@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { listChatSessions } from "@/services/api";
-import { getGuestSessionIdForChatRequest } from "@/services/chatSessionIdentity";
 
 export const useChatStore = create(
     persist(
@@ -16,14 +15,14 @@ export const useChatStore = create(
             setSidebarOpen: (open) => set({ sidebarOpen: open }),
             setActiveMenu: (menu) => set({ activeMenu: menu }),
             setSessionsList: (sessionsList) => set({ sessionsList }),
-            setIsLoadingHistory: (isLoadingHistory) => set({ isLoadingHistory }),
+            setIsLoadingHistory: (isLoadingHistory) =>
+                set({ isLoadingHistory }),
             setChatHistory: (chatHistory) => set({ chatHistory }),
             setTheme: (theme) => set({ theme }),
 
             loadSessions: async () => {
                 try {
-                    const guestSessionId = getGuestSessionIdForChatRequest();
-                    const data = await listChatSessions(guestSessionId);
+                    const data = await listChatSessions();
                     set({ sessionsList: data.sessions || [] });
                 } catch (err) {
                     console.log("Gagal load sessions:", err.message);
@@ -55,6 +54,6 @@ export const useChatStore = create(
                 chatHistory: state.chatHistory,
                 theme: state.theme,
             }),
-        }
-    )
+        },
+    ),
 );

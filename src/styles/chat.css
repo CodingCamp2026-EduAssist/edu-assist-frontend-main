@@ -1116,7 +1116,11 @@
 }
 
 .settings-edit-btn {
-  align-self: flex-start;
+  align-self: center;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 0.75rem 1rem;
   border-radius: 999px;
   border: 1px solid #2563eb;
@@ -1124,6 +1128,7 @@
   color: #2563eb;
   font-size: 0.875rem;
   font-weight: 600;
+  text-align: center;
   cursor: pointer;
   transition: background 0.2s, transform 0.2s;
 }

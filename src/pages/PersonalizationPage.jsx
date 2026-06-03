@@ -5,7 +5,7 @@ import { updateStudentProfile } from '../services/api'
 const STEPS = [
   {
     id: 'educationLevel',
-    step: '1/4',
+    step: '1/5',
     title: 'What is your education level?',
     options: [
       { value: 'high_school', label: 'High School' },
@@ -15,7 +15,7 @@ const STEPS = [
   },
   {
     id: 'difficultyPreference',
-    step: '2/4',
+    step: '2/5',
     title: 'How difficult should lessons be?',
     options: [
       { value: 'easy', label: 'Easy' },
@@ -26,7 +26,7 @@ const STEPS = [
   },
   {
     id: 'pace',
-    step: '3/4',
+    step: '3/5',
     title: "What's your learning pace?",
     options: [
       { value: 'slow', label: 'Slow' },
@@ -36,7 +36,7 @@ const STEPS = [
   },
   {
     id: 'explanationStyle',
-    step: '4/4',
+    step: '4/5',
     title: 'How should EduAssist explain concepts?',
     options: [
       { value: 'concise', label: 'Concise'},
@@ -44,6 +44,12 @@ const STEPS = [
       { value: 'step_by_step', label: 'Step by Step' },
       { value: 'analogy', label: 'Analogy' },
     ],
+  },
+  {
+    id: 'favouriteSubjects',
+    step: '5/5',
+    title: 'What are your favourite subjects?',
+    placeholder: 'e.g. Math, Physics, Biology',
   },
 ]
 
@@ -66,7 +72,21 @@ function PersonalizationPage() {
     setAnswers({ ...answers, [step.id]: value })
   }
 
+  function handleSubjectsChange(value) {
+    setAnswers({
+      ...answers,
+      favouriteSubjects: value
+        .split(',')
+        .map((subject) => subject.trim())
+        .filter(Boolean),
+    })
+  }
+
   function canNext() {
+    if (step.id === 'favouriteSubjects') {
+      return true
+    }
+
     return answers[step.id] !== ''
   }
 
@@ -133,7 +153,18 @@ async function saveAndContinue() {
           <p className="text-xs font-semibold text-blue-600 uppercase tracking-widest">Step {step.step}</p>
           <h1 className="text-xl font-black text-slate-900 -tracking-tight leading-tight">{step.title}</h1>
 
-          <div className="flex flex-col gap-2.5">
+          {step.id === 'favouriteSubjects' ? (
+            <div className="flex flex-col gap-2.5">
+              <input
+                type="text"
+                defaultValue={answers.favouriteSubjects.join(', ')}
+                onChange={(e) => handleSubjectsChange(e.target.value)}
+                placeholder={step.placeholder}
+                className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-200 bg-gray-50 text-sm font-medium text-slate-900 outline-none transition-all placeholder:text-gray-400 focus:border-blue-600 focus:bg-blue-50 focus:shadow-[0_0_0_3px_rgba(37,99,235,0.1)]"
+              />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2.5">
             {step.options.map((opt) => {
               const isSelected = answers[step.id] === opt.value
               return (
@@ -158,9 +189,10 @@ async function saveAndContinue() {
                     {isSelected ? '✓' : ''}
                   </span>
                 </button>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+          )}
 
           <div className="flex gap-3 justify-end mt-2">
             {currentStep > 0 && (

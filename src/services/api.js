@@ -43,13 +43,7 @@ export async function createChatSession(payload = {}) {
         const body = {
             title: payload.title || "New Chat",
             linkedDocumentIds: payload.linkedDocumentIds || [],
-            studentProfile: payload.studentProfile || {
-                educationLevel: "undergraduate",
-                difficultyPreference: "medium",
-                favouriteSubjects: [],
-                pace: "medium",
-                explanationStyle: "concise",
-            },
+            
         };
 
         if (payload.guestSessionId)
@@ -146,21 +140,24 @@ export async function sendMessage(
 /* =========================
    UPLOAD SOURCE (RAG)
 ========================= */
-export async function uploadFile(file, userId) {
-    try {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("userId", userId);
-        return await apiClient.post("/api/v1/upload/file", formData, {
-            headers: { "Content-Type": "multipart/form-data" },
-        });
-    } catch (error) {
-        throw new Error(
-            error.response?.data?.message ||
-                error.response?.data?.error ||
-                "Upload file gagal",
-        );
-    }
+export async function uploadDocument(file) {
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    return await apiClient.post('/api/v1/documents', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Upload file gagal')
+  }
+}
+
+export async function listDocuments() {
+  try {
+    return await apiClient.get('/api/v1/documents')
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Gagal mengambil dokumen')
+  }
 }
 
 export async function uploadURL(url, userId) {

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { uploadFile, uploadURL, uploadDrive, uploadText } from "@/services/api";
+import { uploadDocument, uploadURL, uploadDrive, uploadText } from "@/services/api";
 
 export const useSourcesStore = create((set, get) => ({
     sources: [],
@@ -21,44 +21,44 @@ export const useSourcesStore = create((set, get) => ({
         sourceInput: "",
     })),
 
-    deleteSource: (id) => set((state) => ({
+   deleteSource: (id) => set((state) => {
+    const source = state.sources.find((s) => s.id === id)
+    return {
         sources: state.sources.filter((s) => s.id !== id),
-    })),
+        documentIds: (state.documentIds || []).filter((d) => d !== source?.documentId),
+    }
+}),
 
-    handleFileUpload: async (file, userId) => {
-        const tempId = Date.now();
-        
-        // Add temporary upload state
+    handleFileUpload: async (file) => {
+    const tempId = Date.now();
+    
+    set((state) => ({
+        sources: [...state.sources, {
+            id: tempId,
+            type: "file",
+            name: file.name,
+            meta: "Uploading...",
+        }],
+        showAddSource: false,
+    }));
+
+    try {
+        const result = await uploadDocument(file)
+        const documentId = result.document?.id
         set((state) => ({
-            sources: [
-                ...state.sources,
-                {
-                    id: tempId,
-                    type: "file",
-                    name: file.name,
-                    meta: "Uploading...",
-                },
-            ],
-            showAddSource: false,
+            sources: state.sources.map((s) =>
+                s.id === tempId
+                    ? { ...s, documentId, meta: `${(file.size / 1024).toFixed(1)} KB` }
+                    : s
+            ),
         }));
-
-        try {
-            await uploadFile(file, userId);
-            set((state) => ({
-                sources: state.sources.map((s) =>
-                    s.id === tempId
-                        ? { ...s, meta: `${(file.size / 1024).toFixed(1)} KB` }
-                        : s
-                ),
-            }));
-        } catch (err) {
-            set((state) => ({
-                sources: state.sources.filter((s) => s.id !== tempId),
-            }));
-            alert(`Upload gagal: ${err.message}`);
-        }
-    },
-
+    } catch (err) {
+        set((state) => ({
+            sources: state.sources.filter((s) => s.id !== tempId),
+        }));
+        alert(`Upload gagal: ${err.message}`);
+    }
+},
     handleAddSourceInput: async (userId) => {
         const { activeSourceType, sourceInput, addSource } = get();
         if (!sourceInput.trim()) return;

@@ -37,7 +37,7 @@ export default function InitialChatPage() {
             const authenticated = isAuthenticatedUser();
             const guestSessionId = authenticated ? null : getOrCreateGuestSessionId();
 
-            const session = await createChatSession({
+         /*   const session = await createChatSession({
                 title: input.trim().slice(0, 50),
                 guestSessionId,
                 studentProfile: {
@@ -47,7 +47,13 @@ export default function InitialChatPage() {
                     pace: userProfile.pace || "medium",
                     explanationStyle: userProfile.explanationStyle || "concise",
                 },
-            });
+            });*/
+
+            const session = await createChatSession({
+    title: input.trim().slice(0, 50),
+    guestSessionId,
+    linkedDocumentIds: [],
+});
 
             const sessionId = session.conversationId;
             sessionStorage.setItem(sessionStorageKey, sessionId);

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { getMe } from "../services/api";
 import { clearGuestChatState } from "../services/chatSessionIdentity";
 import { useAuthStore } from "../store/auth-store";
+import { useProfileStore } from "../store/profile-store";
 
 function AuthCallback() {
     const navigate = useNavigate();
@@ -31,15 +32,23 @@ function AuthCallback() {
                     levelPendidikan: user.levelPendidikan || "",
                     preferensiTone: user.preferensiTone || "",
                 });
+            const { getUserProfile } = useProfileStore.getState();
+                const profile = await getUserProfile();
+
+                if (profile?.educationLevel && profile?.pace) {
+                    navigate("/"); // sudah ada profile → langsung chat
+                } else {
+                    navigate("/personalization"); // belum → isi dulu
+                }
             } catch (err) {
                 console.error("Gagal fetch user profile:", err);
+                navigate("/personalization");
             }
-
-            navigate("/personalization");
         }
 
         handleCallback();
     }, []);
+
 
     return (
         <div className="min-h-screen bg-[#f0efed] flex items-center justify-center relative overflow-hidden font-sans">

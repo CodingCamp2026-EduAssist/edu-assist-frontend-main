@@ -130,7 +130,7 @@ const PersonalizationPage = () => {
     }, [getUserProfile]);
 
     // Sync state variables once profile is loaded
-    useEffect(() => {
+    /*useEffect(() => {
         if (userProfiles) {
             if (userProfiles.educationLevel) setEducationLevel(userProfiles.educationLevel);
             if (userProfiles.difficultyPreference) setDifficultyPreference(userProfiles.difficultyPreference);
@@ -138,7 +138,7 @@ const PersonalizationPage = () => {
             if (userProfiles.pace) setPace(userProfiles.pace);
             if (userProfiles.favouriteSubjects) setFavouriteSubjects(userProfiles.favouriteSubjects);
         }
-    }, [userProfiles]);
+    }, [userProfiles]);*/
 
     const handleSubjectToggle = (subject) => {
         setFavouriteSubjects((prev) =>

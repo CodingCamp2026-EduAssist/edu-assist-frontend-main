@@ -282,6 +282,29 @@ export default function ChatPage() {
                 return;
             }
 
+            if (eventType === "courseRecommended") {
+                setMessages((prev) => {
+                    const updated = [...prev];
+                    const last = updated[updated.length - 1];
+                    if (last?.role === "assistant") {
+                        updated[updated.length - 1] = {
+                            ...last,
+                            courses: parsed.courseRecommended,
+                        };
+                    } else {
+                        hasStartedText = true;
+                        setIsThinking(false);
+                        updated.push({
+                            role: "assistant",
+                            content: "",
+                            courses: parsed.courseRecommended
+                        });
+                    }
+                    return updated;
+                });
+                return;
+            }
+
             // type === "text"
             if (!hasStartedText) {
                 hasStartedText = true;
@@ -355,6 +378,7 @@ export default function ChatPage() {
                 const formattedMessages = (data.messages || []).map((msg) => ({
                     role: msg.role === "user" ? "user" : "assistant",
                     content: msg.content,
+                    courses: msg.metadata?.courseRecommended || msg.courseRecommended || [],
                 }));
 
                 // If there's an initial message stored from InitialChatPage, send it first
@@ -447,7 +471,26 @@ export default function ChatPage() {
                                     {msg.role === "user" ? (
                                         msg.content
                                     ) : (
-                                        <Markdown content={msg.content} />
+                                        <>
+                                            <Markdown content={msg.content} />
+                                            {msg.courses && msg.courses.length > 0 && (
+                                                <div className="mt-4 flex flex-wrap gap-2">
+                                                    {msg.courses.map((course, idx) => (
+                                                        <a
+                                                            key={idx}
+                                                            href={course.url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-[0.8rem] font-semibold rounded-lg border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors"
+                                                            title={`Skills: ${course.skills?.join(", ")} | Rating: ${course.rating}`}
+                                                        >
+                                                            {course.title}
+                                                            <ChevronRight size={14} />
+                                                        </a>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </>
                                     )}
                                 </div>
                             </div>

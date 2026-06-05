@@ -1,11 +1,13 @@
 import React from "react";
-import { History, SquarePen, Menu, MessageSquare } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { History, SquarePen, Menu, MessageSquare, Trash2 } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useChatStore } from "@/store/chat-store";
 import ProfileSection from "./ProfileSection";
+import { cn } from "@/lib/utils";
 
 export default function Sidebar() {
     const navigate = useNavigate();
+    const { sessionId } = useParams();
     const {
         sidebarOpen,
         setSidebarOpen,
@@ -13,6 +15,7 @@ export default function Sidebar() {
         setActiveMenu,
         sessionsList,
         chatHistory,
+        deleteSession,
     } = useChatStore();
 
     const handleNewChat = () => {
@@ -40,7 +43,6 @@ export default function Sidebar() {
             navigate(`/`);
         }
     };
-
     return (
         <aside
             className={`bg-white dark:bg-[#121218] border-r border-[#e5e7eb] dark:border-white/10 flex flex-col py-5 gap-1 transition-all duration-250 overflow-hidden relative z-20 ${sidebarOpen ? "w-[220px] min-w-[220px] px-4 max-[768px]:absolute max-[768px]:h-full" : "w-14 min-w-14 px-0 flex flex-col items-center max-[768px]:w-0 max-[768px]:min-w-0 max-[768px]:p-0"}`}
@@ -61,7 +63,7 @@ export default function Sidebar() {
                 </button>
             </div>
             <button
-                className={`flex items-center bg-[#2563eb] dark:bg-blue-600 text-white text-[0.85rem] font-semibold cursor-pointer mb-3 transition-all duration-200 whitespace-nowrap hover:bg-[#2563eb]/90 dark:hover:bg-blue-500 shadow-sm border-none ${sidebarOpen ? "gap-2.5 py-2.5 px-3 rounded-lg w-full" : "w-10 h-10 p-0 rounded-full justify-center shrink-0"}`}
+                className={`flex items-center bg-gray-200 dark:bg-blue-600 text-black dark:text-white text-[0.85rem] font-semibold cursor-pointer mb-3 transition-all duration-200 whitespace-nowrap hover:bg-gray-300 dark:hover:bg-blue-500 shadow-sm border-none ${sidebarOpen ? "gap-2.5 py-2.5 px-3 rounded-lg w-full" : "w-10 h-10 p-0 rounded-full justify-center shrink-0"}`}
                 onClick={handleNewChat}
             >
                 <SquarePen size={18} className="shrink-0" />
@@ -94,36 +96,75 @@ export default function Sidebar() {
                 </p>
                 <div className="overflow-y-auto max-h-[calc(100vh-320px)] scrollbar-none">
                     {sessionsList.length > 0 ? (
-                        sessionsList.slice(0, 5).map((session) => (
-                            <button
-                                key={session.id || session.conversationId}
-                                className="text-[0.8rem] text-slate-500 dark:text-white/50 py-1.5 px-2 rounded-lg cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap transition-all duration-200 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white text-left w-full flex items-center gap-1.5"
-                                onClick={() => handleLoadHistory(session)}
-                            >
-                                <MessageSquare
-                                    size={14}
-                                    className="shrink-0 text-slate-400 dark:text-white/40"
-                                />
-                                <span className="overflow-hidden text-ellipsis whitespace-nowrap">
-                                    {session.title || "Percakapan"}
-                                </span>
-                            </button>
-                        ))
+                        sessionsList.slice(0, 5).map((session) => {
+                            const id = session.id || session.conversationId;
+                            return (
+                                <div key={id} className="flex items-center w-full group relative mb-0.5">
+                                    <button
+                                        className={cn(
+                                            "text-[0.8rem] text-slate-500 dark:text-white/50 py-1.5 px-2 rounded-lg cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap transition-all duration-200 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white text-left flex-1 flex items-center gap-1.5",
+                                            sessionId === id &&
+                                                "bg-gray-100 dark:bg-white/10 text-slate-900 dark:text-white",
+                                        )}
+                                        onClick={() => handleLoadHistory(session)}
+                                    >
+                                        <MessageSquare
+                                            size={14}
+                                            className={cn(
+                                                "shrink-0 text-slate-400 dark:text-white/40",
+                                            )}
+                                        />
+                                        <span className="overflow-hidden text-ellipsis whitespace-nowrap pr-6">
+                                            {session.title || "Percakapan"}
+                                        </span>
+                                    </button>
+                                    <button
+                                        className="absolute right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-transparent border-none text-red-500 hover:text-red-600 cursor-pointer p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-500/20 flex items-center justify-center"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            deleteSession(id);
+                                            if (sessionId === id) navigate("/");
+                                        }}
+                                        title="Hapus Percakapan"
+                                    >
+                                        <Trash2 size={13} />
+                                    </button>
+                                </div>
+                            );
+                        })
                     ) : chatHistory.length > 0 ? (
                         chatHistory.map((item) => (
-                            <button
-                                key={item.id}
-                                className="text-[0.8rem] text-slate-500 dark:text-white/50 py-1.5 px-2 rounded-lg cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap transition-all duration-200 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white text-left w-full flex items-center gap-1.5"
-                                onClick={() => handleLoadHistory(item)}
-                            >
-                                <MessageSquare
-                                    size={14}
-                                    className="shrink-0 text-slate-400 dark:text-white/40"
-                                />
-                                <span className="overflow-hidden text-ellipsis whitespace-nowrap">
-                                    {item.title}
-                                </span>
-                            </button>
+                            <div key={item.id} className="flex items-center w-full group relative mb-0.5">
+                                <button
+                                    className={cn(
+                                        "text-[0.8rem] text-slate-500 dark:text-white/50 py-1.5 px-2 rounded-lg cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap transition-all duration-200 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white text-left flex-1 flex items-center gap-1.5",
+                                        sessionId === item.id &&
+                                            "bg-gray-100 dark:bg-white/10 text-slate-900 dark:text-white",
+                                    )}
+                                    onClick={() => handleLoadHistory(item)}
+                                >
+                                    <MessageSquare
+                                        size={14}
+                                        className={cn(
+                                            "shrink-0 text-slate-400 dark:text-white/40",
+                                        )}
+                                    />
+                                    <span className="overflow-hidden text-ellipsis whitespace-nowrap pr-6">
+                                        {item.title}
+                                    </span>
+                                </button>
+                                <button
+                                    className="absolute right-1 opacity-0 group-hover:opacity-100 transition-opacity bg-transparent border-none text-red-500 hover:text-red-600 cursor-pointer p-1.5 rounded hover:bg-red-50 dark:hover:bg-red-500/20 flex items-center justify-center"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        deleteSession(item.id);
+                                        if (sessionId === item.id) navigate("/");
+                                    }}
+                                    title="Hapus Percakapan"
+                                >
+                                    <Trash2 size={13} />
+                                </button>
+                            </div>
                         ))
                     ) : (
                         <p className="text-[0.78rem] text-slate-400 dark:text-white/30 py-1 px-2">

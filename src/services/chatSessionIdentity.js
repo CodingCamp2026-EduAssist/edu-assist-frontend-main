@@ -22,7 +22,6 @@ function createUuid() {
 
 export function isAuthenticatedUser() {
   const accessToken = useAuthStore.getState().accessToken
-  console.log('Checking authentication status. Access Token:', accessToken)
   return !!accessToken
 }
 

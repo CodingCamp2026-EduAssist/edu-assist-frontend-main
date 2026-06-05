@@ -16,7 +16,7 @@ function shouldSkipRefresh(url = '') {
   return url.includes('/api/v1/auth/refresh')
 }
 
-async function rotateAccessToken() {
+export async function rotateAccessToken() {
   if (!refreshPromise) {
     console.log('Initiating token refresh...')
 
@@ -29,7 +29,6 @@ async function rotateAccessToken() {
           throw new Error('Refresh endpoint did not return an access token')
         }
 
-        console.log('Token refresh successful. New Access Token:', nextAccessToken)
         useAuthStore.getState().setAccessToken(nextAccessToken)
         return nextAccessToken
       })

@@ -8,12 +8,14 @@ import { useEffect } from "react";
 import PersonalizationPage from "./pages/PersonalizationPage";
 import { useAuthStore } from "./store/auth-store";
 import ChatLayout from "./layouts/ChatLayout";
+import { Toaster } from "sonner";
 
 function App() {
     const accessToken = useAuthStore((state) => state.accessToken);
 
     useEffect(() => {
-        const isAuthCallback = window.location.pathname.startsWith("/auth/callback");
+        const isAuthCallback =
+            window.location.pathname.startsWith("/auth/callback");
         const isLogin = window.location.pathname === "/login";
 
         if (!accessToken && !isAuthCallback && !isLogin) {
@@ -21,7 +23,9 @@ function App() {
         }
     }, [accessToken]);
     return (
-        <BrowserRouter>
+        <>
+            <Toaster position="top-center" richColors />
+            <BrowserRouter>
             <Routes>
                 {/* Chat layout route */}
                 <Route element={<ChatLayout />}>
@@ -38,6 +42,7 @@ function App() {
                 <Route path="*" element={<NotFoundPage />} />
             </Routes>
         </BrowserRouter>
+        </>
     );
 }
 

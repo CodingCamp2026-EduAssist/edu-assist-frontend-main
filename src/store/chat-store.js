@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { listChatSessions } from "@/services/api";
+import { listChatSessions, removeSession } from "@/services/api";
 
 export const useChatStore = create(
     persist(
@@ -26,6 +26,25 @@ export const useChatStore = create(
                     set({ sessionsList: data.sessions || [] });
                 } catch (err) {
                     console.log("Gagal load sessions:", err.message);
+                }
+            },
+
+            deleteSession: async (sessionId) => {
+                try {
+                    // Hanya panggil API jika ID adalah string (bukan timestamp Date.now() dari history lokal)
+                    if (typeof sessionId === "string") {
+                        await removeSession(sessionId);
+                    }
+                    set((state) => ({
+                        sessionsList: state.sessionsList.filter(
+                            (s) => (s.id || s.conversationId) !== sessionId
+                        ),
+                        chatHistory: state.chatHistory.filter(
+                            (h) => h.id !== sessionId
+                        )
+                    }));
+                } catch (err) {
+                    console.error("Gagal menghapus session:", err.message);
                 }
             },
 

@@ -4,7 +4,7 @@ import { useAuthStore } from "@/store/auth-store";
 import { useProfileStore } from "@/store/profile-store";
 import { useChatStore } from "@/store/chat-store";
 import { logout } from "../services/api";
-
+import { toast } from "sonner";
 export default function SettingsPanel() {
     const user = useAuthStore((state) => state.user);
     const userProfile = useProfileStore((state) => state.userProfiles) || {};
@@ -88,7 +88,7 @@ export default function SettingsPanel() {
             setTimeout(() => setSaveSuccess(false), 2000);
         } catch (err) {
             console.error("Gagal menyimpan profil:", err);
-            alert("Gagal menyimpan profil: " + err.message);
+            toast.error("Gagal menyimpan profil: " + err.message);
         } finally {
             setIsSaving(false);
         }

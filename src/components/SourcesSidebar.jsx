@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import {
     Plus,
     FolderOpen,
@@ -7,11 +7,13 @@ import {
     ClipboardList,
     ChevronLeft,
     ChevronRight,
+    Loader2,
 } from "lucide-react";
 import { SiGoogledrive } from "react-icons/si";
 import { useSourcesStore } from "@/store/sources-store";
 import { useAuthStore } from "@/store/auth-store";
-
+import { getListDocuments } from "@/services/api";
+import { toast } from "sonner";
 const SOURCE_ICONS = {
     file: <FileText size={20} className="text-blue-500" />,
 };
@@ -25,23 +27,43 @@ export default function SourcesSidebar() {
         sourcesOpen,
         showAddSource,
         dragOver,
+        loading,
+        uploading,
         setSourcesOpen,
         setShowAddSource,
         setDragOver,
-        deleteSource,
+        handleDeleteSource,
         handleFileUpload,
+        getListDocuments,
+        selectedPaths,
+        toggleSelectDocument,
     } = useSourcesStore();
 
     const dragCounter = useRef(0);
 
     const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        if (!file.name.toLowerCase().endsWith(".pdf")) {
-            alert("Hanya file PDF yang diperbolehkan!");
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+        const pdfFiles = files.filter((file) =>
+            file.name.toLowerCase().endsWith(".pdf"),
+        );
+        if (pdfFiles.length === 0) {
+            toast.error("Hanya file PDF yang diperbolehkan!");
             return;
         }
-        handleFileUpload(file, user?.id || "guest");
+        if (pdfFiles.length < files.length) {
+            toast.warning("Beberapa file diabaikan karena bukan PDF.");
+        }
+        const validFiles = pdfFiles.filter((file) => {
+            if (file.size > 2 * 1024 * 1024) {
+                toast.error(`File "${file.name}" melebihi batas ukuran 2MB!`);
+                return false;
+            }
+            return true;
+        });
+        validFiles.forEach((file) => {
+            handleFileUpload(file, user?.id || "guest");
+        });
     };
 
     const handleDragEnter = (e) => {
@@ -64,14 +86,33 @@ export default function SourcesSidebar() {
         e.preventDefault();
         setDragOver(false);
         dragCounter.current = 0;
-        const file = e.dataTransfer.files[0];
-        if (!file) return;
-        if (!file.name.toLowerCase().endsWith(".pdf")) {
-            alert("Hanya file PDF yang diperbolehkan!");
+        const files = Array.from(e.dataTransfer.files);
+        if (files.length === 0) return;
+        const pdfFiles = files.filter((file) =>
+            file.name.toLowerCase().endsWith(".pdf"),
+        );
+        if (pdfFiles.length === 0) {
+            toast.error("Hanya file PDF yang diperbolehkan!");
             return;
         }
-        handleFileUpload(file, user?.id || "guest");
+        if (pdfFiles.length < files.length) {
+            toast.warning("Beberapa file diabaikan karena bukan PDF.");
+        }
+        const validFiles = pdfFiles.filter((file) => {
+            if (file.size > 2 * 1024 * 1024) {
+                toast.error(`File "${file.name}" melebihi batas ukuran 2MB!`);
+                return false;
+            }
+            return true;
+        });
+        validFiles.forEach((file) => {
+            handleFileUpload(file, user?.id || "guest");
+        });
     };
+
+    useEffect(() => {
+        getListDocuments();
+    }, []);
 
     return (
         <div
@@ -124,7 +165,7 @@ export default function SourcesSidebar() {
 
             {/* Scoped Drag-Active Zone (Excluding Header & Button) */}
             <div
-                className="flex-grow flex flex-col relative min-h-0 gap-3"
+                className="grow flex flex-col relative min-h-0 gap-3"
                 onDragEnter={handleDragEnter}
                 onDragOver={(e) => e.preventDefault()}
                 onDragLeave={handleDragLeave}
@@ -133,7 +174,10 @@ export default function SourcesSidebar() {
                 {/* Drag-Over Overlay */}
                 {dragOver && (
                     <div className="absolute inset-0 bg-[#eff6ff]/95 dark:bg-blue-950/90 backdrop-blur-[2px] z-50 flex flex-col items-center justify-center border-2 border-dashed border-[#2563eb] rounded-xl pointer-events-none p-4 text-center">
-                        <FileText size={44} className="text-[#2563eb] animate-bounce mb-2" />
+                        <FileText
+                            size={44}
+                            className="text-[#2563eb] animate-bounce mb-2"
+                        />
                         <p className="text-[0.875rem] font-bold text-[#2563eb] dark:text-blue-400">
                             Lepaskan PDF untuk Upload!
                         </p>
@@ -161,6 +205,7 @@ export default function SourcesSidebar() {
                                 ref={fileInputRef}
                                 type="file"
                                 accept=".pdf"
+                                multiple
                                 className="hidden"
                                 onChange={handleFileChange}
                             />
@@ -169,9 +214,32 @@ export default function SourcesSidebar() {
                 )}
 
                 {/* Sources List */}
-                {sources.length === 0 ? (
+                {loading && sources.length === 0 ? (
                     sourcesOpen ? (
-                        <div className="flex-grow flex flex-col items-center justify-center gap-1.5 text-center py-8 px-2">
+                        <div className="grow flex flex-col gap-2 overflow-y-auto">
+                            {[1, 2, 3].map((i) => (
+                                <div
+                                    key={i}
+                                    className="animate-pulse bg-[#f9fafb] dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 rounded-lg p-3 flex flex-col gap-2"
+                                >
+                                    <div className="h-4 bg-slate-200 dark:bg-white/10 rounded w-2/3"></div>
+                                    <div className="h-3 bg-slate-200 dark:bg-white/10 rounded w-1/2"></div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="grow flex flex-col gap-3 items-center w-full overflow-y-auto">
+                            {[1, 2, 3].map((i) => (
+                                <div
+                                    key={i}
+                                    className="w-10 h-10 rounded-lg bg-slate-200 dark:bg-[#1a1a24] animate-pulse shrink-0"
+                                ></div>
+                            ))}
+                        </div>
+                    )
+                ) : sources.length === 0 ? (
+                    sourcesOpen ? (
+                        <div className="grow flex flex-col items-center justify-center gap-1.5 text-center py-8 px-2">
                             <FolderOpen
                                 size={40}
                                 className="text-slate-300 dark:text-white/20 mb-1"
@@ -184,50 +252,117 @@ export default function SourcesSidebar() {
                             </p>
                         </div>
                     ) : (
-                        <div className="flex-grow flex items-center justify-center text-slate-300 dark:text-white/10">
+                        <div className="grow flex items-center justify-center text-slate-300 dark:text-white/10">
                             <FolderOpen size={20} />
                         </div>
                     )
                 ) : sourcesOpen ? (
                     <div className="grid grid-cols-2 gap-2 overflow-y-auto">
-                        {sources.map((source) => (
-                            <div
-                                key={source.id}
-                                className="bg-[#f9fafb] dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 rounded-lg p-3 flex flex-col gap-1.5 relative transition-all duration-200 hover:border-[#2563eb] hover:bg-[#eff6ff] dark:hover:bg-white/5 group"
-                            >
-                                <div className="shrink-0">
-                                    {SOURCE_ICONS[source.type] || (
-                                        <FileText size={20} />
+                        {sources.map((source) => {
+                            const isSelected =
+                                source.originalPath &&
+                                selectedPaths.includes(source.originalPath);
+
+                            return (
+                                <div
+                                    key={source.id}
+                                    onClick={() => {
+                                        if (
+                                            source.status !== "uploading" &&
+                                            source.originalPath
+                                        ) {
+                                            toggleSelectDocument(
+                                                source.originalPath,
+                                            );
+                                        }
+                                    }}
+                                    className={`bg-[#f9fafb] dark:bg-[#1a1a24] border rounded-lg p-3 flex flex-col gap-1.5 relative transition-all duration-200 group cursor-pointer ${
+                                        source.status === "uploading"
+                                            ? "border-blue-400 dark:border-blue-500/50 bg-blue-50/10 dark:bg-blue-950/10"
+                                            : isSelected
+                                              ? "border-[#2563eb] dark:border-blue-500 bg-[#eff6ff] dark:bg-blue-950/30 shadow-sm"
+                                              : "border-[#e5e7eb] dark:border-white/10 hover:border-[#2563eb] hover:bg-[#eff6ff] dark:hover:bg-white/5"
+                                    }`}
+                                >
+                                    <div className="flex items-center justify-between w-full">
+                                        <div className="shrink-0 flex items-center gap-2">
+                                            {source.status !== "uploading" &&
+                                                source.originalPath && (
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={!!isSelected}
+                                                        onChange={() => {}}
+                                                        className="w-3.5 h-3.5 rounded border-slate-300 dark:border-white/20 text-[#2563eb] focus:ring-0 cursor-pointer"
+                                                    />
+                                                )}
+                                            {source.status === "uploading" ? (
+                                                <Loader2
+                                                    size={20}
+                                                    className="text-blue-500 animate-spin"
+                                                />
+                                            ) : (
+                                                SOURCE_ICONS["file"] || (
+                                                    <FileText size={20} />
+                                                )
+                                            )}
+                                        </div>
+                                        {source.status === "uploading" && (
+                                            <span className="text-[0.62rem] font-bold text-blue-500 bg-blue-50 dark:bg-blue-950/50 px-1.5 py-0.5 rounded animate-pulse shrink-0">
+                                                UPLOADING
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p
+                                            className={`text-[0.75rem] font-medium overflow-hidden text-ellipsis whitespace-nowrap ${source.status === "uploading" ? "text-blue-600 dark:text-blue-400" : "text-[#1a1a2e] dark:text-white"}`}
+                                        >
+                                            {source.fileName}
+                                        </p>
+                                        {source.status === "uploading" ? (
+                                            <div className="w-full bg-slate-100 dark:bg-white/10 rounded-full h-1 mt-1.5 overflow-hidden">
+                                                <div className="bg-blue-500 h-full rounded-full animate-pulse w-full"></div>
+                                            </div>
+                                        ) : (
+                                            <p className="text-[0.68rem] text-[#9ca3af] overflow-hidden text-ellipsis whitespace-nowrap">
+                                                {source.fileSize}
+                                            </p>
+                                        )}
+                                    </div>
+                                    {source.status !== "uploading" && (
+                                        <button
+                                            className="absolute top-1 right-1 w-[18px] h-[18px] rounded-full border-none bg-[#fee2e2] dark:bg-red-950/50 text-[#ef4444] text-[0.85rem] cursor-pointer hidden group-hover:flex items-center justify-center transition-colors duration-200 hover:bg-[#fecaca] dark:hover:bg-red-900"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteSource(
+                                                    source.originalPath,
+                                                );
+                                            }}
+                                        >
+                                            ×
+                                        </button>
                                     )}
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-[0.75rem] font-medium text-[#1a1a2e] dark:text-white overflow-hidden text-ellipsis whitespace-nowrap">
-                                        {source.name}
-                                    </p>
-                                    <p className="text-[0.68rem] text-[#9ca3af] overflow-hidden text-ellipsis whitespace-nowrap">
-                                        {source.meta}
-                                    </p>
-                                </div>
-                                <button
-                                    className="absolute top-1 right-1 w-[18px] h-[18px] rounded-full border-none bg-[#fee2e2] dark:bg-red-950/50 text-[#ef4444] text-[0.85rem] cursor-pointer hidden group-hover:flex items-center justify-center transition-colors duration-200 hover:bg-[#fecaca] dark:hover:bg-red-900"
-                                    onClick={() => deleteSource(source.id)}
-                                >
-                                    ×
-                                </button>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 ) : (
-                    <div className="flex-grow flex flex-col gap-3 items-center w-full overflow-y-auto pb-4">
+                    <div className="grow flex flex-col gap-3 items-center w-full overflow-y-auto pb-4">
                         {sources.map((source) => (
                             <div
                                 key={source.id}
-                                title={source.name}
-                                className="w-10 h-10 rounded-lg bg-white dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 flex items-center justify-center hover:border-[#2563eb] dark:hover:border-blue-500 cursor-pointer shrink-0 transition-colors duration-200"
+                                title={source.fileName}
+                                className={`w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer shrink-0 transition-all duration-200 ${source.status === "uploading" ? "bg-blue-50/50 dark:bg-blue-950/20 border border-blue-400 animate-pulse" : "bg-white dark:bg-[#1a1a24] border border-[#e5e7eb] dark:border-white/10 hover:border-[#2563eb] dark:hover:border-blue-500"}`}
                                 onClick={() => setSourcesOpen(true)}
                             >
-                                {SOURCE_ICONS[source.type] || (
-                                    <FileText size={18} />
+                                {source.status === "uploading" ? (
+                                    <Loader2
+                                        size={18}
+                                        className="text-blue-500 animate-spin"
+                                    />
+                                ) : (
+                                    SOURCE_ICONS["file"] || (
+                                        <FileText size={18} />
+                                    )
                                 )}
                             </div>
                         ))}

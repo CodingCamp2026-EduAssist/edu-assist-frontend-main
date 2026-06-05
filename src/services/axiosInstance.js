@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { clearAuthState, getAccessToken, setAccessToken } from './authStorage'
+import { useAuthStore } from '../store/auth-store'
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000',
@@ -16,7 +16,7 @@ function shouldSkipRefresh(url = '') {
   return url.includes('/api/v1/auth/refresh')
 }
 
-async function rotateAccessToken() {
+export async function rotateAccessToken() {
   if (!refreshPromise) {
     console.log('Initiating token refresh...')
 
@@ -29,8 +29,7 @@ async function rotateAccessToken() {
           throw new Error('Refresh endpoint did not return an access token')
         }
 
-        console.log('Token refresh successful. New Access Token:', nextAccessToken)
-        setAccessToken(nextAccessToken)
+        useAuthStore.getState().setAccessToken(nextAccessToken)
         return nextAccessToken
       })
       .finally(() => {
@@ -43,7 +42,7 @@ async function rotateAccessToken() {
 
 apiClient.interceptors.request.use(
   (config) => {
-    const token = getAccessToken()
+    const token = useAuthStore.getState().accessToken
     if (token) {
       config.headers = config.headers || {}
       config.headers.Authorization = `Bearer ${token}`
@@ -65,7 +64,7 @@ apiClient.interceptors.response.use(
     }
 
     if (originalRequest._retry) {
-      clearAuthState()
+      useAuthStore.getState().clearAuthState()
       window.location.href = '/'
       return Promise.reject(error)
     }
@@ -76,7 +75,7 @@ apiClient.interceptors.response.use(
       await rotateAccessToken()
       return apiClient(originalRequest)
     } catch (refreshError) {
-      clearAuthState()
+      useAuthStore.getState().clearAuthState()
       window.location.href = '/'
       return Promise.reject(refreshError)
     }
